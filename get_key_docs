@@ -1,0 +1,35 @@
+
+import socket
+import select
+import server_handeler
+
+# Socket Create
+
+
+def start_server():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    host_name = socket.gethostname()
+    host_ip = socket.gethostbyname(host_name)
+    print('HOST IP:', host_ip)
+    port = 3456
+    socket_address = (host_ip, port)
+
+# Socket Bind
+    server_socket.bind(socket_address)
+
+# Socket Listen
+    server_socket.listen(5)
+    print("LISTENING AT:", socket_address)
+    return server_socket
+
+# Socket Accept
+ready_to_read, ready_to_write, in_error = select.select(read_list, write_list, error_list)
+
+client_socket, addr = server_socket.accept()
+print('GOT CONNECTION FROM:', addr)
+while True:
+    print("waiting for key")
+    data = client_socket.recv(1024).decode()
+    print("key: ", data)
+    to_send = "%s recived!" % data
+    client_socket.send(to_send.encode())
