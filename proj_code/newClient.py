@@ -9,27 +9,15 @@ import colorama
 from colorama import Back, Fore
 colorama.init(autoreset=True)
 
+from client_utils import initialize
+initialize()
+from client_utils import *
+
+
 error_c = Fore.BLACK + Back.RED
 ok_c = Back.GREEN + Fore.BLACK
 pending_c = Back.LIGHTBLUE_EX + Fore.BLACK
 data_c = Back.LIGHTYELLOW_EX + Fore.GREEN
-
-
-def initialize():
-    global client_keys, server_public_key, wconn_keys
-    global wconn_ip, BYTE_SIZE, backup_bind, user_backup
-
-    client_keys = None
-    server_public_key = None
-    wconn_keys = None
-    wconn_ip = "127.0.0.1"
-    BYTE_SIZE = 4000
-    backup_bind = None
-    try:
-        if user_backup is not None:
-            pass
-    except NameError:
-        user_backup = None
 
 
 def handle_close(*socks):
@@ -202,17 +190,18 @@ def backup_client():
         print(error_c + "cant connect to backup")
 
 
-def start_server(bind=('127.0.0.1', 5555)):
+def start_server():
+    global server_address
     initialize()
 
     global client_keys
     print(pending_c + "trying to connect")
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    client_socket.connect(bind)  # a tuple
+    client_socket.connect(server_address)  # a tuple
     client_keys = Encryption_handeler.get_keys(500)
     print(ok_c + "server now connected, with keys")
-    print(data_c + f"server running on {bind}")
+    print(data_c + f"server running on {server_address}")
     return client_socket
 
 

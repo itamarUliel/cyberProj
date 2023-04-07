@@ -23,7 +23,8 @@ def server_constants(ks=500, rs=1024, ip="127.0.0.1", port=5555, client=False):
         keys_size = ks
         recv_size = rs
         bind = (ip, port)
-        return keys_size, recv_size, bind
+        backup_address = ("127.0.0.1", 7890)
+        return keys_size, recv_size, bind, backup_address
     else:
         bind = (ip, port)
         return bind

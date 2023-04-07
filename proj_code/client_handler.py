@@ -10,7 +10,7 @@ ok_c = Back.GREEN + Fore.BLACK
 pending_c = Back.LIGHTBLUE_EX + Fore.BLACK
 data_c = Back.LIGHTYELLOW_EX + Fore.GREEN
 
-BYTE_SIZE = 1024
+from client_utils import BYTE_SIZE
 
 
 def build_login(bm, user_backup):

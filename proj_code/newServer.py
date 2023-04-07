@@ -1,6 +1,6 @@
 import select
 
-from server_values import *
+from server_values import initialize
 initialize()
 from server_handeler import *
 
@@ -9,11 +9,10 @@ from colorama import Back, Fore
 colorama.init(autoreset=True)
 
 server_keys = None
-ks, rs, BIND = server_constants()
+ks, rs, BIND, backup_address = server_constants()
 inputs = []
 backup_public = None
 update_chk = False
-backup_address = ("127.0.0.1", 7890)
 
 error_c = Fore.BLACK + Back.RED
 ok_c = Back.GREEN + Fore.BLACK
