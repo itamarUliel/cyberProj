@@ -1,4 +1,5 @@
 import Encryption_handeler
+import sys
 
 import colorama
 from colorama import Back, Fore
@@ -12,16 +13,23 @@ data_c = Back.LIGHTYELLOW_EX + Fore.GREEN
 BYTE_SIZE = 1024
 
 
-def build_login():
-    data = input("\t\tenter us then password (split with space) (or write 'exit' to exit)").split()
-    if data[0] == "exit":
-        return None
-    try:
-        us, ps = data[0], data[1]
-        return f"login|{us}|{ps}"
-    except IndexError:
-        print("try doing better...")
-        return build_login()
+def build_login(bm, user_backup):
+    if not bm or (bm and user_backup is None):
+        try:
+            data = input("\t\tenter us then password (split with space) (or write 'exit' to exit)").split()
+        except ValueError:
+            sys.stdin = open(0, 'r')
+            data = input("\t\tenter us then password (split with space) (or write 'exit' to exit)").split()
+        if data[0] == "exit":
+            return None
+        try:
+            us, ps = data[0], data[1]
+            return f"login|{us}|{ps}"
+        except IndexError:
+            print("try doing better...")
+            return build_login(bm, user_backup)
+    else:
+        return f"login|{user_backup[0]}|{user_backup[1]}"
 
 
 def connected(s, spb, pr):
@@ -49,3 +57,11 @@ def build_sendto_msg(s, spb, pr):
 
 def build_close():
     return "close|"
+
+
+class NeedBackupException(Exception):
+    def __init__(self, message="the main server falled. need to move backup"):
+        self.message = message
+
+    def __str__(self):
+        return f"{self.__class__.__name__}: {self.message}"

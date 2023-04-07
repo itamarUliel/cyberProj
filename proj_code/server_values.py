@@ -11,13 +11,14 @@ def initialize():
     for line in f:
         us, ps = line.split("|")
         known_users[us] = ps.replace("\n", "")
+    f.close()
 
     connected_users = {}           # {user: conn,...}
     users_keys = {}              # {conn: public_key,...}
     authorize_connection = {}    # {user1: [user2, user3], user2: [user1],...}
 
 
-def server_constants(ks=500, rs=1024, ip="127.0.0.1", port=5678, client=False):
+def server_constants(ks=500, rs=1024, ip="127.0.0.1", port=5555, client=False):
     if not client:
         keys_size = ks
         recv_size = rs

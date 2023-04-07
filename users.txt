@@ -1,4 +1,0 @@
-itamar|1234
-uliel|3565
-hallo|goodbye
-q|1

@@ -1,5 +1,7 @@
 import Encryption_handeler
 from server_values import *
+import bcrypt
+import socket
 
 import colorama
 from colorama import Back, Fore
@@ -11,16 +13,53 @@ pending_c = Back.LIGHTBLUE_EX + Fore.BLACK
 data_c = Back.LIGHTYELLOW_EX + Fore.GREEN
 
 
-def login(s, data):    # data = [conn ,user, password]
+def get_free_port(ip):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind((ip, 0))
+    port = sock.getsockname()[1]
+    sock.close()
+    return port
+
+
+def save_backup(data):
+    backup = ""
+    for s in data.keys():
+        user = data[s]["user"]
+        authorize_u = data[s]["authorize"]
+        if user is not None and authorize_u != []:
+            backup += ":".join([user, ",".join(authorize_u)]) + "|"
+    if backup == "":
+        backup = "nothing to share."
+    return backup
+
+
+def load_backup(data): # data = b"us1:a1,a2,a3|us2..."
+    backup = {}
+    for user in data.split("|"):
+        if user == "":
+            continue
+        us, authorize_list = user.split(":")[0], user.split(":")[1].split(",")
+        backup[us] = authorize_list
+    return backup
+
+
+def login(s, data, bm):    # data = [conn ,user, password]  # backup {us: [authrize]
     global known_users         # {user: password,...}
     global connected_users     # {user: conn,...}
     global conn_data
     try:
-        if known_users[data[0]] == data[1]:   # 0: us 1: pass
+        if bcrypt.checkpw(data[1].encode(),  known_users[data[0]].encode()):   # 0: us 1: pass
             if data[0] not in connected_users.keys():
                 conn_data[s]["user"] = data[0]
-                connected_users[data[0]] = s
                 print(ok_c + f"{data[0]} is now logged in!")
+                if bm[0]:
+                    backup = bm[1]
+                    if data[0] in backup.keys():
+                        conn_data[s]["authorize"] = backup[data[0]]
+                        print(data_c + f"{data[0]} has aa backup, backup load: {backup[data[0]]}")
+                    else:
+                        print(data_c + f"{data[0]} didn't have backup to load")
+                connected_users[data[0]] = s
                 return ["ok", "None"]
             else:
                 return ["error", "user already connected, try again"]
