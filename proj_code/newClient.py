@@ -11,9 +11,6 @@ initialize()
 from client_utils import *
 
 
-
-
-
 def handle_close(*socks):
     for sock in socks:
         sock.close()

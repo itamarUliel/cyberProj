@@ -4,7 +4,7 @@ from colors import *
 from server_values import initialize
 initialize()
 from server_handler import *
-
+from chat_server import PrimaryServer, BackupServer
 import Encryption_handler
 server_keys = None
 ks, rs, BIND, backup_address = server_constants()
@@ -114,7 +114,7 @@ def encrypt(s, msg):
             s.sendall(send_msgs(["ok"]))
             key = s.recv(rs)
             conn_data[s]["pb"] = Encryption_handler.load_public(key)
-            s.sendall(Encryption_handler.save_public(server_keys["pb"]))
+            s.sendall(Encryption_handler.save_public(server.get_server_keys()["pb"]))
         elif command == "wconn_enc":           # s: wconn_enc| r_client: ok| s: wconn_key r_client: ok
             error_msg = "error while replacing write conn keys"
             s.sendall(send_msgs(["ok"]))
@@ -243,42 +243,22 @@ def start_listening(server, backup_server=None, bm=[False]):    # bm = [T/F, bac
 
 
 def backup_mode():
-    global backup_address
-    backup = {}
-    try:
-        backup_key = Encryption_handler.get_keys()
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(backup_address)
-        server.listen()
-        print("START_SERVER: LISTENING AT:", backup_address)
-        prime, adreess = server.accept()
+    global server
+    server = BackupServer()
+    global server_keys
+    server_keys = server.get_server_keys()
+    start_listening(server.get_server_socket(), bm=[True, server.get_backup_data()])
 
-        # prime_key = Encryption_handler.load_public(prime.recv(1024))
-        prime.sendall(Encryption_handler.save_public(backup_key["pb"]))
-
-        data = True
-        while data:
-            data = Encryption_handler.decrypt(prime.recv(1024), backup_key["pr"])
-            print(data)
-            if data == "nothing to share.":
-                continue
-            backup = load_backup(data)
-
-    except ConnectionResetError:
-        prime.close()
-        server.close()
-        print(ERROR_COLOR + "prime server is down!")
-        print(DATA_COLOR + "active backup!")
-        initialize()
-        server = start_server(backup_address, backup=False)
-        start_listening(server, bm=[True, backup])
 
 
 def prime_mode():
-    global BIND
+    global server
+    server = PrimaryServer()
+    global server_keys, backup_public
+    backup_public = server.get_backup_public_key()
+    server_keys = server.get_server_keys()
+    start_listening(server.get_server_socket(), server.get_backup_socket())
 
-    server, backup_server = start_server(BIND)
-    start_listening(server, backup_server)
 
 
 def main():
@@ -290,12 +270,12 @@ def main():
 88K          "88b 888   d8P  Y8b      d88P"    888 "88b     "88b 888    
 "Y8888b. .d888888 888   88888888      888      888  888 .d888888 888    
      X88 888  888 888   Y8b.          Y88b.    888  888 888  888 Y88b.  
- 88888P' "Y888888 888    "Y8888        "Y8888P 888  888 "Y888888  "Y888
+ 88888P' "Y888888 888    "Y8888        p"Y8888P 888  888 "Y888888  "Y888
                                     the project of ITAMAR ULIEL
     """)
     server_type = ""
     while server_type not in ['p', 'b']:
-        server_type = input("'p' or 'b'?")
+        server_type = input("'p' for primary or 'b' for backup: ")
 
     if server_type == 'p':
         print(DATA_COLOR + "server running in PRIMARY MODE")
