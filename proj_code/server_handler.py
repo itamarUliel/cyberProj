@@ -1,16 +1,9 @@
-import Encryption_handeler
+import Encryption_handler
 from server_values import *
 import bcrypt
 import socket
 
-import colorama
-from colorama import Back, Fore
-colorama.init(autoreset=True)
-
-error_c = Fore.BLACK + Back.RED
-ok_c = Back.GREEN + Fore.BLACK
-pending_c = Back.LIGHTBLUE_EX + Fore.BLACK
-data_c = Back.LIGHTYELLOW_EX + Fore.GREEN
+from colors import *
 
 
 def get_free_port(ip):
@@ -51,14 +44,14 @@ def login(s, data, bm):    # data = [conn ,user, password]  # backup {us: [authr
         if bcrypt.checkpw(data[1].encode(),  known_users[data[0]].encode()):   # 0: us 1: pass
             if data[0] not in connected_users.keys():
                 conn_data[s]["user"] = data[0]
-                print(ok_c + f"{data[0]} is now logged in!")
+                print(OK_COLOR + f"{data[0]} is now logged in!")
                 if bm[0]:
                     backup = bm[1]
                     if data[0] in backup.keys():
                         conn_data[s]["authorize"] = backup[data[0]]
-                        print(data_c + f"{data[0]} has aa backup, backup load: {backup[data[0]]}")
+                        print(DATA_COLOR + f"{data[0]} has aa backup, backup load: {backup[data[0]]}")
                     else:
-                        print(data_c + f"{data[0]} didn't have backup to load")
+                        print(DATA_COLOR + f"{data[0]} didn't have backup to load")
                 connected_users[data[0]] = s
                 return ["ok", "None"]
             else:
@@ -74,21 +67,21 @@ def sendto_msg(conn, send_to, msg):
     global conn_data
 
     if send_to in connected_users.keys():
-        print(data_c + f"{conn_data[conn]['user']} wants to send {send_to} this: {msg}")
+        print(DATA_COLOR + f"{conn_data[conn]['user']} wants to send {send_to} this: {msg}")
         if send_to in conn_data[conn]["authorize"]:
             try:
                 send_msg = "msg|%s|%s" % (conn_data[conn]["user"], msg)  # msg|sender|{msg}
                 wconn = conn_data[connected_users[send_to]]["wconn"]
-                send_msg = Encryption_handeler.encrypt(send_msg, conn_data[connected_users[send_to]]["wconn_key"])
+                send_msg = Encryption_handler.encrypt(send_msg, conn_data[connected_users[send_to]]["wconn_key"])
                 wconn.sendall(send_msg)
             except:
-                print(error_c + "error happened while sending, msg didn't send!")
+                print(ERROR_COLOR + "error happened while sending, msg didn't send!")
                 return ["error", "problem accrue while sending the msg"]
             else:
-                print(ok_c + "msg send!")
+                print(OK_COLOR + "msg send!")
                 return ["ok", "msg send"]
         else:
-            print(error_c + "user unauthorized to send!")
+            print(ERROR_COLOR + "user unauthorized to send!")
             return ["error", "the sender is not authorize to send to_send"]
     else:
         return ["error", "to_send is not currently connected (or exist)"]
@@ -101,11 +94,11 @@ def authorize(s, to_authorize):
         return ["error", "the user is not currently connected"]
     if to_authorize not in conn_data[s]["authorize"]:
         while True:
-            ask = input(pending_c + "does %s can connect to %s\n'd' = denied\t'o' = ok" % (conn_data[s]["user"], to_authorize))
+            ask = input(PENDING_COLOR + "does %s can connect to %s\n'd' = denied\t'o' = ok" % (conn_data[s]["user"], to_authorize))
             if ask in ['d', 'o']:
                 break
             else:
-                print(error_c + "try again ('d'/'o'")
+                print(ERROR_COLOR + "try again ('d'/'o'")
         if ask == 'd':
             return ["error", "the server denied"]
         elif ask == 'o':

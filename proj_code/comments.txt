@@ -12,7 +12,7 @@ if status == "ok":
     s.sendall("start_enc|".encode())
     if status != "ok":
     s.sendall("wconn_enc|".encode())
-    s.sendall(Encryption_handeler.save_public(wconn_keys["pb"]))
+    s.sendall(Encryption_handler.save_public(wconn_keys["pb"]))
     s.sendall(f'wconn|{"|".join([wconn_bind[0], str(wconn_bind[1])])}'.encode())
 
 show in start_conn
@@ -25,4 +25,4 @@ if "actively refused it" in str(e):
 
 
 typo:
-Encryption_handeler
+Encryption_handler

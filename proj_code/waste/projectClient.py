@@ -1,5 +1,5 @@
 import socket
-import Encryption_handeler
+import Encryption_handler
 import client_handler
 
 client_keys = None
@@ -13,7 +13,7 @@ def start_server():
     host_ip = '127.0.0.1'
     port = 5678
     client_socket.connect((host_ip, port))  # a tuple
-    client_keys = Encryption_handeler.get_keys(1500)
+    client_keys = Encryption_handler.get_keys(1500)
     return client_socket
 
 
@@ -39,9 +39,9 @@ def start_sending(s):
     data = "start_encrypt|"   # ready to send bytes
     s.sendall(data.encode())
     data = s.recv(BYTE_SIZE)
-    s.sendall(Encryption_handeler.save_public(client_keys["pb"]))
+    s.sendall(Encryption_handler.save_public(client_keys["pb"]))
     bpb = s.recv(BYTE_SIZE)
-    server_public_key = Encryption_handeler.load_public(bpb)
+    server_public_key = Encryption_handler.load_public(bpb)
 
     while True:                    # encrypt from now
         show = """
@@ -54,7 +54,7 @@ def start_sending(s):
         act = input("act:")[0]
         if act in ['a', 'm', 'e', 'c']:
             if act == 'e':
-                s.sendall(Encryption_handeler.encrypt("close|", server_public_key))
+                s.sendall(Encryption_handler.encrypt("close|", server_public_key))
             elif act == 'c':
                 print(client_handler.connected(s, server_public_key, client_keys["pr"]))
             else:
@@ -63,7 +63,7 @@ def start_sending(s):
                 elif act == 'm':
                     send = client_handler.build_sendto_msg(s, server_public_key, client_keys["pr"])
                 s.sendall(send.encode())
-                data = Encryption_handeler.decrypt(s.recv(BYTE_SIZE), client_keys["pr"])
+                data = Encryption_handler.decrypt(s.recv(BYTE_SIZE), client_keys["pr"])
                 status, msg = data.split("|")
                 if status == "ok":
                     print(msg)
