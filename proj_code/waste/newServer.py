@@ -173,30 +173,6 @@ def comm(s, msg):
         handle_close(s)
 
 
-def start_server(bind, backup=True):
-    global server_keys
-    global backup_public
-    global backup_address
-
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    socket_address = bind
-    server.bind(socket_address)
-    server.listen()
-    server_keys = Encryption_handler.get_keys(ks)
-    print(DATA_COLOR + "START_SERVER: LISTENING AT:", socket_address)
-    print(OK_COLOR + "START_SERVER: server got keys!", end="\n\n")
-
-    if backup:
-        backup_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        backup_server.connect(backup_address)
-        # backup_server.sendall(Encryption_handler.save_public(server_keys["pb"]))
-        backup_public = Encryption_handler.load_public(backup_server.recv(1024))
-        print(OK_COLOR + "backup is conncted!")
-        return server, backup_server
-
-    return server
-
-
 def start_listening(server, backup_server=None, bm=[False]):    # bm = [T/F, back]
     global conn_data
     global connected_users

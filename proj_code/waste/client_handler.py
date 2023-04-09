@@ -3,7 +3,7 @@ import sys
 
 from colors import *
 
-from client_utils import BYTE_SIZE
+from proj_code.waste.client_utils import BYTE_SIZE
 
 
 def build_login(bm, user_backup):
