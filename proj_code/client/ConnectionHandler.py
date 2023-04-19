@@ -92,7 +92,8 @@ class ConnectionHandler:
             else:
                 logging.warning(f"User '{username}' failed to logged in. {msg}")
                 return False
-        except Exception:
+        except Exception as e:
+            print(e)
             print("Error during login")
             return False
 

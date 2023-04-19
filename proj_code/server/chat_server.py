@@ -7,7 +7,6 @@ from proj_code.server import *
 class ChatServer:
 
     def __init__(self, is_primary, address):
-        self.__known_users = self.set_known_users()
         self.__address = address
         self.__server_keys = None
         self.__server_socket: socket.socket = None
@@ -16,11 +15,12 @@ class ChatServer:
         self.__update_chk = False
         self.__connected_users = {}
         self.__connections_list = []
-        self.__backup = {}
         self.__backup_public_key = None
         self.__backup_socket: socket.socket = None
         self.__is_active = False
         self.__backup_data = None
+
+        self.UserHandler = UserHandler()
 
     def start_running(self):
         if self.__is_primary:
@@ -41,20 +41,6 @@ class ChatServer:
         self.__backup_socket.connect(SECONDARY_ADDRESS)
         self.__backup_public_key = Encryption_handler.load_public(self.__backup_socket.recv(RECEIVE_SIZE))
         print(OK_COLOR + "backup is conncted!")
-
-
-    @staticmethod
-    def set_known_users():
-        known_users = {}
-        f = open("users.txt", 'r')
-        for line in f:
-            us, ps = line.split("|")
-            known_users[us] = ps.replace("\n", "")
-        f.close()
-        return known_users
-
-    def get_known_users(self):
-        return self.__known_users
 
     def start_server(self):
         self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -96,6 +82,7 @@ class ChatServer:
 
         try:
             self.__connected_users.pop(current_conn_data.get_user())
+            self.UserHandler.close_user(current_conn_data.get_user())
         except KeyError:
             pass
         for user in self.__conn_data.keys():
@@ -130,6 +117,7 @@ class ChatServer:
                 self.__conn_data[current_socket].set_status("pending")
             else:
                 raise Exception
+
         except:
             print(ERROR_COLOR + f"{current_socket.getpeername()} failed to enc, reason: {error_msg}")
             current_socket.sendall(ChatProtocol.built_error(error_msg).encode())
@@ -201,10 +189,10 @@ class ChatServer:
                     try:
                         data = current_socket.recv(RECEIVE_SIZE)
                         if data:
-                            if self.__conn_data[current_socket].get_status() == "pending":
-                                self.pending(current_socket, data)
-                            elif self.__conn_data[current_socket].get_status() == "encrypt":
+                            if self.__conn_data[current_socket].get_status() == "encrypt":
                                 self.encrypt(current_socket, data.decode())
+                            elif self.__conn_data[current_socket].get_status() == "pending":
+                                self.pending(current_socket, data)
                             elif self.__conn_data[current_socket].get_status() == "comm":
                                 self.comm(current_socket, data)
                         else:
@@ -240,9 +228,18 @@ class ChatServer:
         msg = Encryption_handler.decrypt(msg, self.__server_keys["pr"])
         command, data = msg.split("|")[0], msg.split("|")[1:]
         if command == "login":  # send: login|us|ps  # recv: ok/error|response
-            response = login(current_socket, data, self)
-            print(DATA_COLOR + "LOGGIN: the login try went: ", response)
-            current_socket.sendall(self.send_msgs(response, current_socket))
+            # response = login(current_socket, data, self)
+            username, pwd = data
+            response = self.UserHandler.login(username, pwd)
+            print(DATA_COLOR + "LOGGIN: the login try went: ", response[1])
+            if response[0]:
+                current_socket.sendall(Encryption_handler.encrypt(ChatProtocol.built_ok(response[1]), self.__conn_data[current_socket].get_public_key()))
+                self.__conn_data[current_socket].set_user(username)
+                self.__connected_users[username] = current_socket
+                if not self.__is_primary and username in self.__backup_data.keys():
+                    self.__conn_data[current_socket].set_authorize = self.__backup_data[username]
+            else:
+                current_socket.sendall(Encryption_handler.encrypt(ChatProtocol.built_ok(response[1]), self.__conn_data[current_socket].get_public_key()))
 
         elif command == "wconn" and self.__conn_data[current_socket].get_user() is not None:  # send: wconn|ip|port recv:ok/error|response
             ip, port = data
@@ -256,7 +253,7 @@ class ChatServer:
 
         elif command == "close":  # send: close|
             print(ERROR_COLOR + f"{current_socket.getpeername()} ask to close, closing...")
-            current_socket.sendall(self.send_msgs(MessgeBuilder.built_ok(), current_socket))
+            current_socket.sendall(self.send_msgs(ChatProtocol.built_ok(), current_socket))
             self.__connections_list.remove(current_socket)
             self.handle_close(current_socket)
         else:
