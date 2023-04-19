@@ -1,8 +1,3 @@
-import socket
-import Encryption_handler
-
-from colors import *
-
 PRIMARY_SERVER_IP = "127.0.0.1"
 PRIMARY_SERVER_PORT = 5555
 PRIMARY_ADDRESS = (PRIMARY_SERVER_IP, PRIMARY_SERVER_PORT)

@@ -1,9 +1,8 @@
-import Encryption_handler
 import bcrypt
 import socket
-from Connction_data import ConnectionData
 
-from colors import *
+from proj_code.common import *
+from proj_code.server import *
 
 
 def get_free_port(ip):

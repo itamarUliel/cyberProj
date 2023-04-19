@@ -1,10 +1,9 @@
 import socket
 import logging
-from ConnectionServer import ConnectionServer
-from connection_utils import *
 from time import sleep
-from ChatProtocol import *
-import Encryption_handler
+
+from proj_code.common import *
+from proj_code.connection import *
 
 
 class ConnectionHandler:

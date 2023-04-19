@@ -1,6 +1,7 @@
 import requests
-from connection_utils import *
 import time
+
+from proj_code.connection import *
 
 class ConnectionServer:
 

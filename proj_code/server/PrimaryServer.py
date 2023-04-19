@@ -1,7 +1,5 @@
-from chat_server import *
-from network_utils import *
-from server_handler import *
-from colors import *
+from proj_code.server import *
+from proj_code.common import *
 
 
 def main():

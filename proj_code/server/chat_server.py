@@ -1,13 +1,8 @@
 import socket
-import Encryption_handler
-from colors import *
-from network_utils import *
-from server_handler import *
 import select
-from Connction_data import ConnectionData
-from messgebuilder import MessgeBuilder
 
-
+from proj_code.common import *
+from proj_code.server import *
 
 class ChatServer:
 
@@ -128,7 +123,7 @@ class ChatServer:
         error_msg = "error while replacing keys"
         try:
             if command == "start_enc":  # s: start_enc| r: ok| s: client_key r: server_key
-                current_socket.sendall(MessgeBuilder.built_ok().encode())
+                current_socket.sendall(ChatProtocol.built_ok().encode())
                 key = current_socket.recv(RECEIVE_SIZE)
                 self.__conn_data[current_socket].set_public_key(Encryption_handler.load_public(key))
                 current_socket.sendall(Encryption_handler.save_public(self.get_server_keys()["pb"]))
@@ -137,7 +132,7 @@ class ChatServer:
                 raise Exception
         except:
             print(ERROR_COLOR + f"{current_socket.getpeername()} failed to enc, reason: {error_msg}")
-            current_socket.sendall(MessgeBuilder.built_error(error_msg).encode())
+            current_socket.sendall(ChatProtocol.built_error(error_msg).encode())
 
     def comm(self, current_socket, msg):
 
@@ -201,7 +196,7 @@ class ChatServer:
                     connection, client_address = current_socket.accept()
                     print(DATA_COLOR + f'LISTEN: new connection from {client_address}', end="\n\n")
                     self.__connections_list.append(connection)
-                    self.__conn_data[connection]: ConnectionData = ConnectionData()
+                    self.__conn_data[connection] = ConnectionData()
                 else:  # s.getpeername()
                     try:
                         data = current_socket.recv(RECEIVE_SIZE)

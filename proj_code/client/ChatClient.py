@@ -1,7 +1,5 @@
-from ConnectionHandler import ConnectionHandler
-from ChatListener import ChatListener
+from proj_code.client import *
 from threading import Thread
-import sys
 
 class ChatClient:
 

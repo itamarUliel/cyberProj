@@ -1,4 +1,5 @@
 import bcrypt
+
 to_reset = input("reset data? ('y' or 'n'): ")[0]
 if to_reset == 'n':
     users = open("users.txt", "a")
