@@ -68,7 +68,8 @@ def authorize(current_socket, to_authorize, self):
         return ["error", "the user is not currently connected"]
     if to_authorize not in current_conn_data.get_authorize():
         while True:
-            ask = input(PENDING_COLOR + "does %s can connect to %s\n'd' = denied\t'o' = ok" % (current_conn_data.get_user(), to_authorize))
+            # ask = input(PENDING_COLOR + "does %s can connect to %s\n'd' = denied\t'o' = ok" % (current_conn_data.get_user(), to_authorize))
+            ask = 'o'
             if ask in ['d', 'o']:
                 break
             else:
