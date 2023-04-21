@@ -1,32 +1,40 @@
 from proj_code.client import *
 from threading import Thread
 
+
 class ChatClient:
 
     def __init__(self):
-        self.conn_handler = ConnectionHandler()
-        self.listener = None
+        self.__conn_handler = ClientConnectionHandler()
+        self.__listener = None
 
     def start_listener(self):
-        self.listener = Thread(target=ChatListener.do_listen, args=[self.conn_handler]).start()
+        self.__listener = Thread(target=ChatListener.do_listen, args=[self.__conn_handler]).start()
 
     def close_connection(self):
-        self.conn_handler.close_connection()
+        self.__conn_handler.close_connection()
         exit()
 
     def authorize(self):
         self.get_connected_users()
         username = input("who you want to get authorize? : ")
-        self.conn_handler.authorize(username)
+        self.__conn_handler.authorize(username)
 
     def send_message(self):
         self.get_connected_users()
         target_user = input("who do you want to send:")
-        msg = input("what to send?: ")
-        self.conn_handler.send_message(target_user, msg)
+        msg = None
+        while True:
+            print(f"enter send mode, user: {target_user}\nto exit enter 'exit_sending'")
+            msg = input("...:")
+            if msg == 'exit_sending':
+                break
+            chk = self.__conn_handler.send_message(target_user, msg)
+            if not chk:
+                break
 
     def get_connected_users(self):
-        conn, auth = self.conn_handler.get_connected_users()
+        conn, auth = self.__conn_handler.get_connected_users()
         print(f"""\n
         connected users:\t {"    ".join(conn.split(","))}
         authorize for you:\t {"    ".join(auth.split(","))}
@@ -44,7 +52,7 @@ class ChatClient:
                 self.close_connection()
             try:
                 username, pwd = data[0], data[1]
-                valid_user = self.conn_handler.login(username, pwd)
+                valid_user = self.__conn_handler.login(username, pwd)
             except IndexError:
                 valid_user = False
 
@@ -52,7 +60,7 @@ class ChatClient:
                 print("try doing better...")
 
     def start_encrypt(self):
-        self.conn_handler.start_encrypt()
+        self.__conn_handler.start_encrypt()
 
     def run(self):
         self.start_encrypt()
@@ -91,6 +99,7 @@ class ChatClient:
 def main():
     chat_client = ChatClient()
     chat_client.run()
+
 
 if __name__ == '__main__':
     main()

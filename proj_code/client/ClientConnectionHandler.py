@@ -6,7 +6,7 @@ from proj_code.common import *
 from proj_code.connection import *
 
 
-class ConnectionHandler:
+class ClientConnectionHandler:
 
     def __init__(self):
         self.__chat_server = self.__connect_chat_server()
@@ -93,7 +93,6 @@ class ConnectionHandler:
                 logging.warning(f"User '{username}' failed to logged in. {msg}")
                 return False
         except Exception as e:
-            print(e)
             print("Error during login")
             return False
 
@@ -137,10 +136,13 @@ class ConnectionHandler:
             status, msg = ChatProtocol.parse_response(self.__receive_message())
             if status == OK_STATUS:
                 logging.info(f"message send")
+                return True
             else:
                 logging.warning(f"couldn't send message: {msg}")
+                return False
         except Exception:
             logging.error("Error during send_message")
+            return False
 
 
 
