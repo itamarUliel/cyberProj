@@ -1,0 +1,32 @@
+Screen {
+    layout: horizontal;
+}
+
+MainComm {
+height: 98%;
+width: 58%;
+border: darkturquoise;
+border_title_align: center;
+}
+
+ChatBox {
+height: 98%;
+width: 40%;
+border: red heavy;
+border_title_align: center;
+}
+
+Header {
+  height: 3;
+  content-align: center middle;
+  color: powderblue;
+  border: powderblue;
+}
+
+Connection_box {
+    dock: bottom;
+    height: 4%;
+    width: 99%;
+    border: greenyellow heavy;
+    border_title_align: center;
+}
