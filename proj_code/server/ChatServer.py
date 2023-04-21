@@ -3,13 +3,13 @@ import select
 
 from proj_code.common import *
 from proj_code.server import *
+from proj_code.server.ServerConnectionHandler import ServerConnectionHandler
+
 
 class ChatServer:
 
     def __init__(self, is_primary, address):
-        self.__address = address
-        self.__server_keys = None
-        self.__server_socket: socket.socket = None
+
         self.__is_primary = is_primary
         self.__conn_data = {}
         self.__update_chk = False
@@ -20,7 +20,8 @@ class ChatServer:
         self.__is_active = False
         self.__backup_data = None
 
-        self.UserHandler = UserHandler()
+        self.__conn_handler = ServerConnectionHandler(address)
+        self.__user_handler = UserHandler()
 
     def start_running(self):
         if self.__is_primary:
@@ -40,22 +41,16 @@ class ChatServer:
         self.__backup_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__backup_socket.connect(SECONDARY_ADDRESS)
         self.__backup_public_key = Encryption_handler.load_public(self.__backup_socket.recv(RECEIVE_SIZE))
-        print(OK_COLOR + "backup is conncted!")
+        print(OK_COLOR + "backup is connected!")
 
     def start_server(self):
-        self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__server_socket.bind(self.__address)
-        self.__server_socket.listen()
-        print(DATA_COLOR + "START_SERVER: LISTENING AT:", self.__address)
-
-        self.__server_keys = Encryption_handler.get_keys(KEY_SIZE)
-        print(OK_COLOR + "START_SERVER: server got keys!", end="\n\n")
+        self.__conn_handler.start()
 
     def get_server_socket(self):
-        return self.__server_socket
+        return self.__conn_handler.get_server_socket()
 
     def get_server_keys(self):
-        return self.__server_keys
+        return self.__conn_handler.get_server_keys()
 
     def get_conn_data(self):
         return self.__conn_data
@@ -82,7 +77,7 @@ class ChatServer:
 
         try:
             self.__connected_users.pop(current_conn_data.get_user())
-            self.UserHandler.close_user(current_conn_data.get_user())
+            self.__user_handler.close_user(current_conn_data.get_user())
         except KeyError:
             pass
         for user in self.__conn_data.keys():
@@ -225,12 +220,12 @@ class ChatServer:
             return ["error", "unable 2 connete, please check and send again"]
 
     def pending(self, current_socket, msg):
-        msg = Encryption_handler.decrypt(msg, self.__server_keys["pr"])
+        msg = Encryption_handler.decrypt(msg, self.__conn_handler.get_private_key())
         command, data = msg.split("|")[0], msg.split("|")[1:]
         if command == "login":  # send: login|us|ps  # recv: ok/error|response
             # response = login(current_socket, data, self)
             username, pwd = data
-            response = self.UserHandler.login(username, pwd)
+            response = self.__user_handler.login(username, pwd)
             print(DATA_COLOR + "LOGGIN: the login try went: ", response[1])
             if response[0]:
                 current_socket.sendall(Encryption_handler.encrypt(ChatProtocol.built_ok(response[1]), self.__conn_data[current_socket].get_public_key()))
