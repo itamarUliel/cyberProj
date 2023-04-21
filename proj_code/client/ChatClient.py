@@ -9,7 +9,7 @@ class ChatClient:
         self.__listener = None
 
     def start_listener(self):
-        self.__listener = Thread(target=ChatListener.do_listen, args=[self.__conn_handler]).start()
+        self.__listener = Thread(target=ChatClientListener.do_listen, args=[self.__conn_handler]).start()
 
     def close_connection(self):
         self.__conn_handler.close_connection()

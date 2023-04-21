@@ -1,7 +1,7 @@
 from proj_code.common import *
 from proj_code.client import *
 
-class ChatListener:
+class ChatClientListener:
 
     @staticmethod
     def do_listen(connection_handler):
