@@ -4,6 +4,7 @@ from time import sleep
 
 from proj_code.common import *
 from proj_code.connection import *
+from proj_code.server import ConnectionData
 
 
 class ServerConnectionHandler:
@@ -11,6 +12,9 @@ class ServerConnectionHandler:
         self.__address = address
         self.__server_keys = None
         self.__server_socket = None
+        self.__conn_data = {}
+        self.__connected_users = {}
+        self.__connections_list = []
 
     def start(self):
         self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,3 +36,33 @@ class ServerConnectionHandler:
 
     def get_server_address(self):
         return self.__address
+
+    def get_all_conn_data(self):
+        return self.__conn_data
+
+    def get_conn_data(self, user):
+        return self.__conn_data[user]
+
+    def add_conn_data(self, user):
+        self.__conn_data[user] = ConnectionData()
+
+    def remove_conn_data(self, user):
+        self.__conn_data.pop(user)
+
+    def get_connected_users(self):
+        return self.__connected_users
+
+    def add_connected_user(self, username, user_socket):
+        self.__connected_users[username] = user_socket
+
+    def remove_connected_user(self, username):
+        self.__connected_users.pop(username)
+
+    def get_connections_list(self):
+        return self.__connections_list
+
+    def add_connection(self, connection):
+        self.__connections_list.append(connection)
+
+    def remove_connection(self, connection):
+        self.__connections_list.remove(connection)
