@@ -59,8 +59,22 @@ class ServerConnectionHandler:
     def add_connected_user(self, username, user_socket):
         self.__connected_users[username] = user_socket
 
-    def remove_connected_user(self, username):
+    def send_close_message(self, connection):
+        self.get_write_socket(connection).sendall(Encryption_handler.encrypt("close|", self.get_public_key(connection)))
+        self.get_write_socket(connection).close()
+
+    def remove_user_connection(self, username):
         self.__connected_users.pop(username)
+
+    def clean_user_authorizations(self, username):
+        authorization_found = False
+        for user in self.get_all_connected_users():
+            try:
+                self.get_authorize(user).remove(username)
+                authorization_found = True
+            except ValueError:
+                continue
+        return authorization_found
 
     def get_connections_list(self):
         return self.__connections_list
@@ -69,7 +83,6 @@ class ServerConnectionHandler:
         self.__connections_list.append(connection)
         if conn_data:
             self.__conn_data[connection] = ConnectionData()
-
 
     def remove_connection(self, connection):
         self.__connections_list.remove(connection)

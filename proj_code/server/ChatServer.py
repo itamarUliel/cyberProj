@@ -102,25 +102,26 @@ class ChatServer:
     def get_backup_data(self):
         return self.__backup_data
 
-    def handle_close(self, current_socket):
+    def handle_close(self, connection):
+        username = self.get_username(connection)
+
         try:
-            self.get_write_socket(current_socket).sendall(Encryption_handler.encrypt("close|", self.get_public_key(current_socket)))
-            self.get_write_socket(current_socket).close()
+            self.__conn_handler.send_close_message(connection)
         except (AttributeError, ConnectionResetError):
             pass
 
         try:
-            self.__conn_handler.remove_connected_user(self.get_username(current_socket))
-            self.__user_handler.close_user(self.get_username(current_socket))
+            self.__conn_handler.remove_user_connection(username)
+            self.__user_handler.close_user(username)
         except KeyError:
             pass
-        for user in self.__conn_handler.get_all_connected_users():
-            try:
-                self.get_authorize(user).remove(self.get_username(current_socket))
-                self.__update_chk = True
-            except ValueError:
-                continue
-        self.__conn_handler.close_connection(current_socket)
+
+        try:
+            self.__update_chk = self.__conn_handler.clean_user_authorizations(username)
+        except ValueError:
+            pass
+
+        self.__conn_handler.close_connection(connection)
 
         print(OK_COLOR + "\n\nHANDLE_CLOSE: done closing!")
         print(DATA_COLOR + f"""HANDLE_CLOSE: 
