@@ -40,14 +40,18 @@ class ServerConnectionHandler:
     def get_all_conn_data(self):
         return self.__conn_data
 
-    def get_conn_data(self, user):
+    def get_all_connected_users(self):
+        return self.__conn_data.keys()
+
+    def __get_conn_data(self, user):
         return self.__conn_data[user]
 
     def add_conn_data(self, user):
         self.__conn_data[user] = ConnectionData()
 
-    def remove_conn_data(self, user):
-        self.__conn_data.pop(user)
+    def close_connection(self, connection):
+        self.__conn_data.pop(connection)
+        connection.close()
 
     def get_connected_users(self):
         return self.__connected_users
@@ -61,8 +65,44 @@ class ServerConnectionHandler:
     def get_connections_list(self):
         return self.__connections_list
 
-    def add_connection(self, connection):
+    def add_connection(self, connection, conn_data=False):
         self.__connections_list.append(connection)
+        if conn_data:
+            self.__conn_data[connection] = ConnectionData()
+
 
     def remove_connection(self, connection):
         self.__connections_list.remove(connection)
+
+    def get_username(self, connection):
+        return self.__get_conn_data(connection).get_user()
+
+    def set_username(self, connection, username):
+        return self.__get_conn_data(connection).set_user(username)
+
+    def get_authorize(self, connection):
+        return self.__get_conn_data(connection).get_authorize()
+
+    def set_authorize(self, connection, to_authorize):
+        self.__get_conn_data(connection).set_authorize(to_authorize)
+
+    def update_authorize(self, connection, to_authorize):
+        self.__get_conn_data(connection).update_authorize(to_authorize)
+
+    def get_status(self, connection):
+        return self.__get_conn_data(connection).get_status()
+
+    def set_status(self, connection, status):
+        self.__get_conn_data(connection).set_status(status)
+
+    def get_public_key(self, connection):
+        return self.__get_conn_data(connection).get_public_key()
+
+    def set_public_key(self, connection, public_key):
+        self.__get_conn_data(connection).set_public_key(public_key)
+
+    def get_write_socket(self, connection):
+        return self.__get_conn_data(connection).get_write_socket()
+
+    def set_write_socket(self, connection, write_socket):
+        return self.__get_conn_data(connection).set_write_socket(write_socket)

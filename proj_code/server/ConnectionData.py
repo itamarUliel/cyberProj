@@ -40,9 +40,3 @@ class ConnectionData:
     def set_write_socket(self, write_socket):
         self.__write_socket = write_socket
 
-    def get_write_socket_key(self):
-        return self.__write_socket_key
-
-    def set_write_socket_key(self, write_socket_key):
-        self.__write_socket_key = write_socket_key
-

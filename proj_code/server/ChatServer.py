@@ -51,14 +51,47 @@ class ChatServer:
     def get_server_keys(self):
         return self.__conn_handler.get_server_keys()
 
+    def add_connection(self, connection, conn_data=False):
+        self.__conn_handler.add_connection(connection, conn_data)
+
     def get_all_conn_data(self):
         return self.__conn_handler.get_all_conn_data()
 
-    def get_conn_data(self, user):
-        return self.__conn_handler.get_conn_data(user)
-
     def get_is_primary(self):
         return self.__is_primary
+
+    def get_username(self, connection):
+        return self.__conn_handler.get_username(connection)
+
+    def set_username(self, connection, username):
+        return self.__conn_handler.set_username(connection, username)
+
+    def get_status(self, connection):
+        return self.__conn_handler.get_status(connection)
+
+    def set_status(self, connection, status):
+        self.__conn_handler.set_status(connection, status)
+
+    def get_authorize(self, connection):
+        return self.__conn_handler.get_authorize(connection)
+
+    def set_authorize(self, connection, to_authorize):
+        self.__conn_handler.set_authorize(connection, to_authorize)
+
+    def update_authorize(self, connection, to_authorize):
+        self.__conn_handler.update_authorize(connection, to_authorize)
+
+    def get_public_key(self, connection):
+        return self.__conn_handler.get_public_key(connection)
+
+    def set_public_key(self, connection, public_key):
+        self.__conn_handler.set_public_key(connection, public_key)
+
+    def get_write_socket(self, connection):
+        return self.__conn_handler.get_write_socket(connection)
+
+    def set_write_socket(self, connection, write_socket):
+        return self.__conn_handler.set_write_socket(connection, write_socket)
 
     def get_connected_users(self):
         return self.__conn_handler.get_connected_users()
@@ -70,54 +103,48 @@ class ChatServer:
         return self.__backup_data
 
     def handle_close(self, current_socket):
-        current_conn_data: ConnectionData = self.__conn_handler.get_conn_data(current_socket)
         try:
-            current_conn_data.get_write_socket().sendall(Encryption_handler.encrypt("close|", current_conn_data.get_public_key()))
-            current_conn_data.get_write_socket().close()
+            self.get_write_socket(current_socket).sendall(Encryption_handler.encrypt("close|", self.get_public_key(current_socket)))
+            self.get_write_socket(current_socket).close()
         except (AttributeError, ConnectionResetError):
             pass
 
         try:
-            self.__conn_handler.remove_connected_user(current_conn_data.get_user())
-            self.__user_handler.close_user(current_conn_data.get_user())
+            self.__conn_handler.remove_connected_user(self.get_username(current_socket))
+            self.__user_handler.close_user(self.get_username(current_socket))
         except KeyError:
             pass
-        for user in self.__conn_handler.get_all_conn_data().keys():
+        for user in self.__conn_handler.get_all_connected_users():
             try:
-                self.__conn_handler.get_conn_data(user).get_authorize().remove(current_conn_data.get_user())
+                self.get_authorize(user).remove(self.get_username(current_socket))
                 self.__update_chk = True
             except ValueError:
                 continue
-        self.__conn_handler.remove_conn_data(current_socket)
-        current_socket.close()
+        self.__conn_handler.close_connection(current_socket)
 
         print(OK_COLOR + "\n\nHANDLE_CLOSE: done closing!")
         print(DATA_COLOR + f"""HANDLE_CLOSE: 
            connected users: {self.__conn_handler.get_connected_users()}     
         """, end="\n\n")
 
-    def send_msgs(self, msg, s=None):
-        if s is None:
+    def send_msgs(self, msg, conn=None):
+        if conn is None:
             return "|".join(msg).encode()
         else:
-            return Encryption_handler.encrypt("|".join(msg), self.__conn_handler.get_conn_data(s).get_public_key())
+            return Encryption_handler.encrypt("|".join(msg), self.get_public_key(conn))
 
     def connected(self, conn):
-        current_conn_data = self.__conn_handler.get_conn_data(conn)
-        data = [f'{",".join(self.get_connected_users())}', f'{",".join(current_conn_data.get_authorize())}']
-        return data
+        return [f'{",".join(self.get_connected_users())}', f'{",".join(self.get_authorize(conn))}']
 
     def sendto_msg(self, conn, send_to, msg):
-        current_conn_data = self.__conn_handler.get_conn_data(conn)
-
         if send_to in self.get_connected_users().keys():
-            print(DATA_COLOR + f"{current_conn_data.get_user()} wants to send {send_to} this: {msg}")
-            if send_to in current_conn_data.get_authorize():
+            print(DATA_COLOR + f"{self.get_username(conn)} wants to send {send_to} this: {msg}")
+            if send_to in self.get_authorize(conn):
                 try:
-                    send_msg = "msg|%s|%s" % (current_conn_data.get_user(), msg)  # msg|sender|{msg}
-                    sent_to_conn_data = self.__conn_handler.get_conn_data(self.get_connected_users()[send_to]) # YYY
-                    wconn = sent_to_conn_data.get_write_socket()
-                    send_msg = Encryption_handler.encrypt(send_msg, sent_to_conn_data.get_public_key())
+                    send_msg = "msg|%s|%s" % (self.get_username(conn), msg)  # msg|sender|{msg}
+                    target_user_connection = self.get_connected_users()[send_to]
+                    wconn = self.get_write_socket(target_user_connection)
+                    send_msg = Encryption_handler.encrypt(send_msg, self.get_public_key(target_user_connection))
                     wconn.sendall(send_msg)
                 except Exception as e:
                     print(e)
@@ -133,10 +160,9 @@ class ChatServer:
             return ["error", "to_send is not currently connected (or exist)"]
 
     def authorize(self, current_socket, to_authorize):
-        current_conn_data = self.__conn_handler.get_conn_data(current_socket)
         if to_authorize not in self.get_connected_users().keys():
             return ["error", "the user is not currently connected"]
-        if to_authorize not in current_conn_data.get_authorize():
+        if to_authorize not in self.get_authorize(current_socket):
             while True:
                 # ask = input(PENDING_COLOR + "does %s can connect to %s\n'd' = denied\t'o' = ok" % (current_conn_data.get_user(), to_authorize))
                 ask = 'o'
@@ -147,7 +173,7 @@ class ChatServer:
             if ask == 'd':
                 return ["error", "the server denied"]
             elif ask == 'o':
-                current_conn_data.update_authorize(to_authorize)
+                self.update_authorize(current_socket, to_authorize)
                 return ["ok", f"the server accepted your conn to {to_authorize}"]
         else:
             return ["error", "user already authorize to send"]
@@ -159,9 +185,9 @@ class ChatServer:
             if command == "start_enc":  # s: start_enc| r: ok| s: client_key r: server_key
                 current_socket.sendall(ChatProtocol.built_ok().encode())
                 key = current_socket.recv(RECEIVE_SIZE)
-                self.__conn_handler.get_conn_data(current_socket).set_public_key(Encryption_handler.load_public(key))
+                self.set_public_key(current_socket, Encryption_handler.load_public(key))
                 current_socket.sendall(Encryption_handler.save_public(self.get_server_keys()["pb"]))
-                self.__conn_handler.get_conn_data(current_socket).set_status("pending")
+                self.set_status(current_socket, "pending")
             else:
                 raise Exception
 
@@ -190,7 +216,7 @@ class ChatServer:
             current_socket.sendall(self.send_msgs(res, current_socket))
 
         elif command == "close":  # close|
-            print(ERROR_COLOR + f"{self.__conn_handler.get_conn_data(current_socket).get_user()} ask to close, closing...")
+            print(ERROR_COLOR + f"{self.get_username(current_socket)} ask to close, closing...")
             self.__conn_handler.remove_connection(current_socket)
             self.handle_close(current_socket)
         else:
@@ -230,17 +256,16 @@ class ChatServer:
                     # New connection
                     connection, client_address = current_socket.accept()
                     print(DATA_COLOR + f'LISTEN: new connection from {client_address}', end="\n\n")
-                    self.__conn_handler.add_connection(connection)
-                    self.__conn_handler.add_conn_data(connection)
+                    self.add_connection(connection, True)
                 else:  # s.getpeername()
                     try:
                         data = current_socket.recv(RECEIVE_SIZE)
                         if data:
-                            if self.__conn_handler.get_conn_data(current_socket).get_status() == "encrypt":
+                            if self.get_status(current_socket) == "encrypt":
                                 self.encrypt(current_socket, data.decode())
-                            elif self.__conn_handler.get_conn_data(current_socket).get_status() == "pending":
+                            elif self.get_status(current_socket) == "pending":
                                 self.pending(current_socket, data)
-                            elif self.__conn_handler.get_conn_data(current_socket).get_status() == "comm":
+                            elif self.get_status(current_socket) == "comm":
                                 self.comm(current_socket, data)
                         else:
                             raise ConnectionResetError
@@ -261,12 +286,11 @@ class ChatServer:
 
     def connect_write(self, current_socket, ip, port):
         try:
-            current_conn_data: ConnectionData = self.__conn_handler.get_conn_data(current_socket)
-            print(f"{time.time()} connecting wconn at {ip}:{port}")
             wconn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             wconn.connect((ip, int(port)))
-            current_conn_data.set_write_socket(wconn)
-            wconn.sendall(Encryption_handler.encrypt("ok|the server connected 2 U, you can start recv msg!", self.__conn_handler.get_conn_data(current_socket).get_public_key()))
+            self.set_write_socket(current_socket, wconn)
+            wconn.sendall(Encryption_handler.encrypt("ok|the server connected 2 U, you can start recv msg!",
+                                                     self.get_public_key(current_socket)))
             return ["ok", ""]
         except:
             print("unable to connect sendable conn")
@@ -281,21 +305,23 @@ class ChatServer:
             response = self.__user_handler.login(username, pwd)
             print(DATA_COLOR + "LOGGIN: the login try went: ", response[1])
             if response[0]:
-                current_socket.sendall(Encryption_handler.encrypt(ChatProtocol.built_ok(response[1]), self.__conn_handler.get_conn_data(current_socket).get_public_key()))
-                self.__conn_handler.get_conn_data(current_socket).set_user(username)
+                current_socket.sendall(Encryption_handler.encrypt(ChatProtocol.built_ok(response[1]),
+                                                                  self.get_public_key(current_socket)))
+                self.set_username(current_socket, username)
                 self.__conn_handler.add_connected_user(username, current_socket)
                 if not self.__is_primary and username in self.__backup_data.keys():
-                    self.__conn_handler.get_conn_data(current_socket).set_authorize = self.__backup_data[username]
+                    self.set_authorize(current_socket, self.__backup_data[username])
             else:
-                current_socket.sendall(Encryption_handler.encrypt(ChatProtocol.built_ok(response[1]), self.__conn_handler.get_conn_data(current_socket).get_public_key()))
+                current_socket.sendall(Encryption_handler.encrypt(ChatProtocol.built_ok(response[1]),
+                                                                  self.get_public_key(current_socket)))
 
-        elif command == "wconn" and self.__conn_handler.get_conn_data(current_socket).get_user() is not None:  # send: wconn|ip|port recv:ok/error|response
+        elif command == "wconn" and self.get_username(current_socket) is not None:  # send: wconn|ip|port recv:ok/error|response
             ip, port = data
             res = self.connect_write(current_socket, ip, port)
             if res[0] == "ok":
                 current_socket.sendall(self.send_msgs(res, current_socket))
-                print(DATA_COLOR + f"{self.__conn_handler.get_conn_data(current_socket).get_user()} is now ready to comm!")
-                self.__conn_handler.get_conn_data(current_socket).set_status("comm")
+                print(DATA_COLOR + f"{self.get_username(current_socket)} is now ready to comm!")
+                self.set_status(current_socket, "comm")
             else:
                 current_socket.sendall(self.send_msgs(res, current_socket))
 
