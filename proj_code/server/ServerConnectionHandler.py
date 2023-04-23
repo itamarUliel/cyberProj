@@ -60,7 +60,8 @@ class ServerConnectionHandler:
         self.__connected_users[username] = user_socket
 
     def send_close_message(self, connection):
-        self.get_write_socket(connection).sendall(Encryption_handler.encrypt("close|", self.get_public_key(connection)))
+        self.get_write_socket(connection).sendall(Encryption_handler.encrypt(ChatProtocol.build_close_connection(),
+                                                                             self.get_public_key(connection)))
         self.get_write_socket(connection).close()
 
     def remove_user_connection(self, username):
