@@ -106,22 +106,14 @@ class ChatServer:
         username = self.get_username(connection)
 
         try:
-            self.__conn_handler.send_close_message(connection)
-        except (AttributeError, ConnectionResetError):
-            pass
-
-        try:
-            self.__conn_handler.remove_user_connection(username)
-            self.__user_handler.close_user(username)
-        except KeyError:
-            pass
-
-        try:
-            self.__update_chk = self.__conn_handler.clean_user_authorizations(username)
+            self.__update_chk = self.__conn_handler.close_connection(connection)
         except ValueError:
             pass
 
-        self.__conn_handler.close_connection(connection)
+        try:
+            self.__user_handler.close_user(username)
+        except KeyError:
+            pass
 
         print(OK_COLOR + "\n\nHANDLE_CLOSE: done closing!")
         print(DATA_COLOR + f"""HANDLE_CLOSE: 

@@ -1,6 +1,4 @@
 import socket
-import logging
-from time import sleep
 
 from proj_code.common import *
 from proj_code.connection import *
@@ -50,8 +48,29 @@ class ServerConnectionHandler:
         self.__conn_data[user] = ConnectionData()
 
     def close_connection(self, connection):
+
+        username = self.get_username(connection)
+        update_backup = False
+
+        try:
+            self.send_close_message(connection)
+        except (AttributeError, ConnectionResetError):
+            pass
+
+        try:
+            self.__connected_users.pop(username)
+        except KeyError:
+            pass
+
+        try:
+            update_backup = self.clean_user_authorizations(username)
+        except ValueError:
+            pass
+
         self.__conn_data.pop(connection)
         connection.close()
+
+        return update_backup
 
     def get_connected_users(self):
         return self.__connected_users
