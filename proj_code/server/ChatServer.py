@@ -2,6 +2,8 @@ import select
 
 from proj_code.server import *
 from proj_code.server.ServerConnectionHandler import ServerConnectionHandler
+from proj_code.server.BackupConnectionHandler import BackupConnectionHandler
+from proj_code.common import ChatProtocol, DELIMITER
 
 
 class ChatServer:
@@ -10,12 +12,12 @@ class ChatServer:
 
         self.__is_primary = is_primary
         self.__update_chk = False
-        self.__backup_public_key = None
-        self.__backup_socket: socket.socket = None
         self.__is_active = False
         self.__backup_data = None
 
         self.__conn_handler = ServerConnectionHandler(address)
+        self.__backup_handler = BackupConnectionHandler()
+
         self.__user_handler = UserHandler()
 
     def start_running(self):
@@ -26,17 +28,8 @@ class ChatServer:
         else:
             self.start_sync()
 
-    def get_backup_socket(self):
-        return self.__backup_socket
-
-    def get_backup_public_key(self):
-        return self.__backup_public_key
-
     def connect_backup(self):
-        self.__backup_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__backup_socket.connect(SECONDARY_ADDRESS)
-        self.__backup_public_key = Encryption_handler.load_public(self.__backup_socket.recv(RECEIVE_SIZE))
-        print(OK_COLOR + "backup is connected!")
+        self.__backup_handler.connect()
 
     def start_server(self):
         self.__conn_handler.start()
@@ -98,8 +91,8 @@ class ChatServer:
     def update_connected_users(self, key, value):
         self.__conn_handler.add_connected_user(key, value)
 
-    def get_backup_data(self):
-        return self.__backup_data
+    def update_backup(self):
+        self.__backup_handler.update(self.get_all_conn_data())
 
     def handle_close(self, connection):
         username = self.get_username(connection)
@@ -114,9 +107,9 @@ class ChatServer:
 
     def send_msgs(self, msg, conn=None):
         if conn is None:
-            return "|".join(msg).encode()
+            return DELIMITER.join(msg).encode()
         else:
-            return Encryption_handler.encrypt("|".join(msg), self.get_public_key(conn))
+            return Encryption_handler.encrypt(DELIMITER.join(msg), self.get_public_key(conn))
 
     def connected(self, conn):
         return [f'{",".join(self.get_connected_users())}', f'{",".join(self.get_authorize(conn))}']
@@ -230,7 +223,7 @@ class ChatServer:
             self.start_listening()
 
     def start_listening(self):
-        self.__conn_handler.add_connection(self.get_server_socket())
+        self.add_connection(self.get_server_socket())
         print(PENDING_COLOR + "LISTEN: listening started")
         while self.__conn_handler.get_connections_list():
             readable, writable, exceptional = select.select(self.__conn_handler.get_connections_list(), [], [])
@@ -259,9 +252,7 @@ class ChatServer:
                         self.handle_close(current_socket)
             if self.__is_primary and self.__update_chk:
                 try:
-                    print(self.__backup_socket)
-                    self.__backup_socket.sendall(Encryption_handler.encrypt(save_backup(self.get_all_conn_data()), self.__backup_public_key))
-                    self.__update_chk = False
+                    self.__update_chk = not self.update_backup()
                 except ConnectionResetError:
                     print(ERROR_COLOR + "couldnt backup")
                     self.__update_chk = False
@@ -316,7 +307,7 @@ class ChatServer:
             print(ERROR_COLOR + f"{current_socket.getpeername()} is unknown and broke protocol, closing...")
             self.handle_close(current_socket)
 
-
+'''
 class PrimaryServer(ChatServer):
     def __init__(self):
         super().__init__(True, PRIMARY_ADDRESS)
@@ -368,4 +359,4 @@ class BackupServer(ChatServer):
 
     def get_backup_data(self):
         return self.__backup_data
-
+'''
