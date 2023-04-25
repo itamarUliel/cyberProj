@@ -1,7 +1,6 @@
 import socket
 
 from proj_code.common import *
-from proj_code.connection import *
 from proj_code.server import ConnectionData
 
 
@@ -50,7 +49,7 @@ class ServerConnectionHandler:
     def close_connection(self, connection):
 
         username = self.get_username(connection)
-        update_backup = False
+        should_update_backup = False
 
         try:
             self.send_close_message(connection)
@@ -63,14 +62,22 @@ class ServerConnectionHandler:
             pass
 
         try:
-            update_backup = self.clean_user_authorizations(username)
+            self.__connections_list.remove(connection)
+        except (KeyError, ValueError):
+            pass
+
+        try:
+            should_update_backup = self.clean_user_authorizations(username)
         except ValueError:
             pass
 
-        self.__conn_data.pop(connection)
+        try:
+            self.__conn_data.pop(connection)
+        except KeyError:
+            pass
         connection.close()
 
-        return update_backup
+        return should_update_backup
 
     def get_connected_users(self):
         return self.__connected_users
@@ -82,9 +89,6 @@ class ServerConnectionHandler:
         self.get_write_socket(connection).sendall(Encryption_handler.encrypt(ChatProtocol.build_close_connection(),
                                                                              self.get_public_key(connection)))
         self.get_write_socket(connection).close()
-
-    def remove_user_connection(self, username):
-        self.__connected_users.pop(username)
 
     def clean_user_authorizations(self, username):
         authorization_found = False
@@ -103,9 +107,6 @@ class ServerConnectionHandler:
         self.__connections_list.append(connection)
         if conn_data:
             self.__conn_data[connection] = ConnectionData()
-
-    def remove_connection(self, connection):
-        self.__connections_list.remove(connection)
 
     def get_username(self, connection):
         return self.__get_conn_data(connection).get_user()

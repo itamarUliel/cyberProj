@@ -1,9 +1,5 @@
-import socket
-import time
-
 import select
 
-from proj_code.common import *
 from proj_code.server import *
 from proj_code.server.ServerConnectionHandler import ServerConnectionHandler
 
@@ -53,6 +49,9 @@ class ChatServer:
 
     def add_connection(self, connection, conn_data=False):
         self.__conn_handler.add_connection(connection, conn_data)
+
+    def __close_connection(self, connection):
+        return self.__conn_handler.close_connection(connection)
 
     def get_all_conn_data(self):
         return self.__conn_handler.get_all_conn_data()
@@ -105,15 +104,8 @@ class ChatServer:
     def handle_close(self, connection):
         username = self.get_username(connection)
 
-        try:
-            self.__update_chk = self.__conn_handler.close_connection(connection)
-        except ValueError:
-            pass
-
-        try:
-            self.__user_handler.close_user(username)
-        except KeyError:
-            pass
+        self.__update_chk = self.__close_connection(connection)
+        self.__user_handler.close_user(username)
 
         print(OK_COLOR + "\n\nHANDLE_CLOSE: done closing!")
         print(DATA_COLOR + f"""HANDLE_CLOSE: 
@@ -210,12 +202,10 @@ class ChatServer:
 
         elif command == "close":  # close|
             print(ERROR_COLOR + f"{self.get_username(current_socket)} ask to close, closing...")
-            self.__conn_handler.remove_connection(current_socket)
             self.handle_close(current_socket)
         else:
             print(ERROR_COLOR + f"{current_socket.getpeername()} is unknown and broke protocol, closing...")
             current_socket.sendall(self.send_msgs(["error", "illegible command, closing connection"]))
-            self.__conn_handler.remove_connection(current_socket)
             self.handle_close(current_socket)
 
     def start_sync(self):
@@ -266,7 +256,6 @@ class ChatServer:
                         # Interpret empty result as closed connection
                         print(ERROR_COLOR + f'\n\nclosing {current_socket.getpeername()}, he died')
                         # Stop listening for input on the connection
-                        self.__conn_handler.remove_connection(current_socket)
                         self.handle_close(current_socket)
             if self.__is_primary and self.__update_chk:
                 try:
@@ -321,12 +310,10 @@ class ChatServer:
         elif command == "close":  # send: close|
             print(ERROR_COLOR + f"{current_socket.getpeername()} ask to close, closing...")
             current_socket.sendall(self.send_msgs(ChatProtocol.built_ok(), current_socket))
-            self.__conn_handler.remove_connection(current_socket)
             self.handle_close(current_socket)
         else:
             current_socket.sendall(self.send_msgs(["error", "illegible command, closing connection"], current_socket))
             print(ERROR_COLOR + f"{current_socket.getpeername()} is unknown and broke protocol, closing...")
-            self.__conn_handler.remove_connection(current_socket)
             self.handle_close(current_socket)
 
 
