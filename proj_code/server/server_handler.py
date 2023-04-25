@@ -12,17 +12,6 @@ def get_free_port(ip):
     return port
 
 
-def load_backup(data): # data = b"us1:a1,a2,a3|us2..."
-    backup = {}
-    for user in data.split("|"):
-        if user == "":
-            continue
-        us, authorize_list = user.split(":")[0], user.split(":")[1].split(",")
-        backup[us] = authorize_list
-    return backup
-
-
-
 
 
 

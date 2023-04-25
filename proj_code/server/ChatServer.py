@@ -21,8 +21,8 @@ class ChatServer:
         self.__user_handler = UserHandler()
 
     def start_running(self):
+        self.start_server()
         if self.__is_primary:
-            self.start_server()
             self.connect_backup()
             self.start_listening()
         else:
@@ -201,25 +201,22 @@ class ChatServer:
             current_socket.sendall(self.send_msgs(["error", "illegible command, closing connection"]))
             self.handle_close(current_socket)
 
+    def switch_servers(self):
+        self.__conn_handler.restart_as_primary()
+
     def start_sync(self):
         try:
-            self.start_server()
-            prime, address = self.get_server_socket().accept()
-            prime.sendall(Encryption_handler.save_public(self.get_server_keys()["pb"]))
+            self.__conn_handler.open_as_backup()
             data = True
             while data:
-                data = Encryption_handler.decrypt(prime.recv(RECEIVE_SIZE), self.get_server_keys()["pr"])
+                data = self.__conn_handler.get_backup_update()
                 print(DATA_COLOR + f"got backup: {data}")
                 if data == "nothing to share.":
                     continue
-                self.__backup_data = load_backup(data)
+                self.__backup_data = ChatProtocol.load_backup(data)
         except ConnectionResetError:
-            prime.close()
-            self.get_server_socket().close()
-            print(ERROR_COLOR + "prime server is down!")
-            print(DATA_COLOR + "active backup!")
+            self.switch_servers()
             self.__is_active = True
-            self.start_server()
             self.start_listening()
 
     def start_listening(self):

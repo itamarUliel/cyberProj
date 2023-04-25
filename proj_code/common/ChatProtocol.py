@@ -76,4 +76,14 @@ class ChatProtocol:
     def build_backup(ip, port):
         return f"{BACKUP_COMMAND}|{ip}|{port}"
 
+    @staticmethod
+    def load_backup(data): # data = b"us1:a1,a2,a3|us2..."
+        backup = {}
+        for user in data.split(DELIMITER):
+            if user == "":
+                continue
+            us, authorize_list = user.split(":")[0], user.split(":")[1].split(",")
+            backup[us] = authorize_list
+        return backup
+
 

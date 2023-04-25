@@ -8,16 +8,12 @@ class BackupConnectionHandler:
         self.__update_chk = False
         self.__backup_public_key = None
         self.__backup_socket: socket.socket = None
-        self.__backup_data = None
 
     def get_backup_public_key(self):
         return self.__backup_public_key
 
     def get_backup_socket(self):
         return self.__backup_socket
-
-    def get_backup_data(self):
-        return self.__backup_data
 
     def save_backup(self, data):
         backup = ""

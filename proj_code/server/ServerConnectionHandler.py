@@ -7,6 +7,8 @@ from proj_code.server import ConnectionData
 class ServerConnectionHandler:
     def __init__(self, address):
         self.__address = address
+        self.__prime = None          # prime server socket if self is backup server
+        self.__prime_address = None  # prime server address if self is backup server
         self.__server_keys = None
         self.__server_socket = None
         self.__conn_data = {}
@@ -21,6 +23,20 @@ class ServerConnectionHandler:
 
         self.__server_keys = Encryption_handler.get_keys(KEY_SIZE)
         print(OK_COLOR + "START_SERVER: server got keys!", end="\n\n")
+
+    def open_as_backup(self):
+        self.__prime, self.__address = self.__server_socket.accept()
+        self.__prime.sendall(Encryption_handler.save_public(self.get_server_keys()["pb"]))
+
+    def get_backup_update(self):
+        return Encryption_handler.decrypt(self.__prime.recv(RECEIVE_SIZE), self.get_server_keys()["pr"])
+
+    def restart_as_primary(self):
+        self.__prime.close()
+        self.get_server_socket().close()
+        print(ERROR_COLOR + "prime server is down!")
+        print(DATA_COLOR + "activate backup!")
+        self.start()
 
     def get_server_socket(self):
         return self.__server_socket
