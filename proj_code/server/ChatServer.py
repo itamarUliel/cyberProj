@@ -3,7 +3,7 @@ import select
 from proj_code.server import *
 from proj_code.server.ServerConnectionHandler import ServerConnectionHandler
 from proj_code.server.BackupConnectionHandler import BackupConnectionHandler
-from proj_code.common import ChatProtocol, DELIMITER
+from proj_code.common import ChatProtocol
 
 ENCRYPT_CONNECTION_STATUS = "encrypt"
 PENDING_CONNECTION_STATUS = "pending"
@@ -179,7 +179,7 @@ class ChatServer:
     def comm(self, current_socket, msg):
 
         msg = Encryption_handler.decrypt(msg, self.__get_server_private_key())
-        command, data = msg.split(DELIMITER)[0], msg.split(DELIMITER)[1:]
+        command, data = ChatProtocol.parse_command(msg)
 
         if command == AUTHORIZE_COMMAND:  # authorize|us
             res = self.authorize(current_socket, data[0])
@@ -305,57 +305,3 @@ class ChatServer:
             print(ERROR_COLOR + f"{current_socket.getpeername()} is unknown and broke protocol, closing...")
             self.handle_close(current_socket)
 
-
-'''
-class PrimaryServer(ChatServer):
-    def __init__(self):
-        super().__init__(True, PRIMARY_ADDRESS)
-        self.start_server()
-
-    def start_server(self):
-        super().start_server()
-        self.connect_backup()
-
-    def get_backup_socket(self):
-        return self.__backup_socket
-
-    def get_backup_public_key(self):
-        return self.__backup_public_key
-
-    def connect_backup(self):
-        self.__backup_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__backup_socket.connect(SECONDARY_ADDRESS)
-        self.__backup_public_key = Encryption_handler.load_public(self.__backup_socket.recv(RECEIVE_SIZE))
-        print(OK_COLOR + "backup is conncted!")
-
-
-class BackupServer(ChatServer):
-    def __init__(self):
-        super().__init__(False, SECONDARY_ADDRESS)
-        self.__is_active = False
-        self.__backup_data = None
-        self.start_sync()
-
-    def start_sync(self):
-        try:
-            super().start_server()
-            prime, address = self.get_server_socket().accept()
-            prime.sendall(Encryption_handler.save_public(self.get_server_keys()["pb"]))
-            data = True
-            while data:
-                data = Encryption_handler.decrypt(prime.recv(RECEIVE_SIZE), self.get_server_keys()["pr"])
-                print(DATA_COLOR + f"got backup: {data}")
-                if data == "nothing to share.":
-                    continue
-                self.__backup_data = load_backup(data)
-        except ConnectionResetError:
-            prime.close()
-            self.get_server_socket().close()
-            print(ERROR_COLOR + "prime server is down!")
-            print(DATA_COLOR + "active backup!")
-            self.__is_active = True
-            super().start_server()
-
-    def get_backup_data(self):
-        return self.__backup_data
-'''

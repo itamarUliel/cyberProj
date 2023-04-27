@@ -25,8 +25,12 @@ class ChatProtocol:
         return data.split(DELIMITER)
 
     @staticmethod
-    def parse_push_message(data):
-        return data.split(DELIMITER)[0], data.split(DELIMITER)[1:]
+    def parse_push_message(msg):
+        return msg.split(DELIMITER)[0], msg.split(DELIMITER)[1:]
+
+    @staticmethod
+    def parse_command(msg):
+        return msg.split(DELIMITER)[0], msg.split(DELIMITER)[1:]
 
     @staticmethod
     def build_close_connection():
@@ -39,10 +43,6 @@ class ChatProtocol:
     @staticmethod
     def build_error(msg=""):
         return f'{ERROR_STATUS}|{msg}'
-
-    @staticmethod
-    def parse_command(msg):
-        return msg.split(DELIMITER)[0], msg.split(DELIMITER)[1:]
 
     @staticmethod
     def build_get_connected_users():
