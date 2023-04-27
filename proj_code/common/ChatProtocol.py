@@ -6,10 +6,11 @@ AUTHORIZE_COMMAND = "authorize"
 SEND_MESSAGE_COMMAND = "sendto"
 WCONN_COMMAND = "wconn"
 ENCRYPT_COMMAND = "start_enc"
-OK_STATUS = "ok"
-ERROR_COMMAND = "error"
 MSG_COMMAND = 'msg'
 BACKUP_COMMAND = 'backup'
+START_ENCRYPT_COMMAND = "start_enc"
+OK_STATUS = "ok"
+ERROR_STATUS = "error"
 
 class ChatProtocol:
     @staticmethod
@@ -29,12 +30,16 @@ class ChatProtocol:
         return f"{CLOSE_COMMAND}{DELIMITER}"
     
     @staticmethod
-    def built_ok(msg=""):
+    def build_ok(msg=""):
         return f'{OK_STATUS}|{msg}'
 
     @staticmethod
-    def built_error(msg=""):
-        return f'{ERROR_COMMAND}|{msg}'
+    def build_error(msg=""):
+        return f'{ERROR_STATUS}|{msg}'
+
+    @staticmethod
+    def parse_command(msg):
+        return msg.split(DELIMITER)[0], msg.split(DELIMITER)[1:]
 
     @staticmethod
     def build_get_connected_users():
@@ -86,4 +91,14 @@ class ChatProtocol:
             backup[us] = authorize_list
         return backup
 
+    @staticmethod
+    def build_error_message(msg=""):
+        return [ERROR_STATUS, msg]
 
+    @staticmethod
+    def build_ok_message(msg=""):
+        return [OK_STATUS, msg]
+
+    @staticmethod
+    def is_ok_status(msg):
+        return msg[0] == "ok"

@@ -156,3 +156,12 @@ class ServerConnectionHandler:
 
     def set_write_socket(self, connection, write_socket):
         return self.__get_conn_data(connection).set_write_socket(write_socket)
+
+    def build_msgs(self, msg, conn=None):
+        if conn is None:
+            return DELIMITER.join(msg).encode()
+        else:
+            return Encryption_handler.encrypt(DELIMITER.join(msg), self.get_public_key(conn))
+
+    def send_message(self, connection, msg):
+        connection.sendall(self.build_msgs(msg, connection))
