@@ -5,6 +5,9 @@ from proj_code.server.ServerConnectionHandler import ServerConnectionHandler
 from proj_code.server.BackupConnectionHandler import BackupConnectionHandler
 from proj_code.common import ChatProtocol, DELIMITER
 
+ENCRYPT_CONNECTION_STATUS = "encrypt"
+PENDING_CONNECTION_STATUS = "pending"
+COMM_CONNECTION_STATUS = "comm"
 
 class ChatServer:
 
@@ -117,7 +120,7 @@ class ChatServer:
             print(DATA_COLOR + f"{self.get_username(conn)} wants to send {send_to} this: {msg}")
             if send_to in self.get_authorize(conn):
                 try:
-                    send_msg = "msg|%s|%s" % (self.get_username(conn), msg)  # msg|sender|{msg}
+                    send_msg = ChatProtocol.build_msg(self.get_username(conn), msg) # msg|sender|{msg}
                     target_user_connection = self.get_connected_users()[send_to]
                     wconn = self.get_write_socket(target_user_connection)
                     send_msg = Encryption_handler.encrypt(send_msg, self.get_public_key(target_user_connection))
@@ -137,7 +140,7 @@ class ChatServer:
 
     def authorize(self, current_socket, to_authorize):
         if to_authorize not in self.get_connected_users().keys():
-            return ["error", "the user is not currently connected"]
+            return ChatProtocol.build_error_message("the user is not currently connected")
         if to_authorize not in self.get_authorize(current_socket):
             while True:
                 # ask = input(PENDING_COLOR + "does %s can connect to %s\n'd' = denied\t'o' = ok" % (current_conn_data.get_user(), to_authorize))
@@ -162,7 +165,7 @@ class ChatServer:
                 key = current_socket.recv(RECEIVE_SIZE)
                 self.set_public_key(current_socket, Encryption_handler.load_public(key))
                 current_socket.sendall(Encryption_handler.save_public(self.get_server_keys()["pb"]))
-                self.set_status(current_socket, "pending")
+                self.set_status(current_socket, PENDING_CONNECTION_STATUS)
             else:
                 raise Exception
 
@@ -183,8 +186,8 @@ class ChatServer:
             except ValueError:
                 pass
         elif command == CONNECTED_COMMAND:  # connected|
-            data = self.connected(current_socket)  # "[connected],[authorize]"
-            self.send_message(current_socket, data)
+            res = self.connected(current_socket)  # "[connected],[authorize]"
+            self.send_message(current_socket, res)
 
         elif command == SEND_MESSAGE_COMMAND:  # sendto_msg|userToSend|msg
             res = self.sendto_msg(current_socket, data[0], data[1])
@@ -231,11 +234,11 @@ class ChatServer:
                     try:
                         data = current_socket.recv(RECEIVE_SIZE)
                         if data:
-                            if self.get_status(current_socket) == "encrypt":
+                            if self.get_status(current_socket) == ENCRYPT_CONNECTION_STATUS:
                                 self.encrypt(current_socket, data.decode())
-                            elif self.get_status(current_socket) == "pending":
+                            elif self.get_status(current_socket) == PENDING_CONNECTION_STATUS:
                                 self.pending(current_socket, data)
-                            elif self.get_status(current_socket) == "comm":
+                            elif self.get_status(current_socket) == COMM_CONNECTION_STATUS:
                                 self.comm(current_socket, data)
                         else:
                             raise ConnectionResetError
@@ -270,7 +273,7 @@ class ChatServer:
             # response = login(current_socket, data, self)
             username, pwd = data
             response = self.__user_handler.login(username, pwd)
-            print(DATA_COLOR + "LOGGIN: the login try went: ", response[1])
+            print(DATA_COLOR + "LOGIN: the login try went: ", response[1])
             if response[0]:
                 current_socket.sendall(Encryption_handler.encrypt(ChatProtocol.build_ok(response[1]),
                                                                   self.get_public_key(current_socket)))
@@ -287,7 +290,7 @@ class ChatServer:
             res = self.connect_write(current_socket, ip, port)
             self.send_message(current_socket, res)
             if ChatProtocol.is_ok_status(res):
-                self.set_status(current_socket, "comm")
+                self.set_status(current_socket, COMM_CONNECTION_STATUS)
                 print(DATA_COLOR + f"{self.get_username(current_socket)} is now ready to comm!")
 
         elif command == CLOSE_COMMAND:  # send: close|

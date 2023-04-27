@@ -9,6 +9,7 @@ ENCRYPT_COMMAND = "start_enc"
 MSG_COMMAND = 'msg'
 BACKUP_COMMAND = 'backup'
 START_ENCRYPT_COMMAND = "start_enc"
+
 OK_STATUS = "ok"
 ERROR_STATUS = "error"
 
