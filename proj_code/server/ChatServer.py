@@ -278,15 +278,13 @@ class ChatServer:
             response = self.__user_handler.login(username, pwd)
             print(DATA_COLOR + "LOGIN: the login try went: ", response[1])
             if response[0]:
-                current_socket.sendall(Encryption_handler.encrypt(ChatProtocol.build_ok(response[1]),
-                                                                  self.get_public_key(current_socket)))
+                self.send_message(current_socket, ChatProtocol.build_ok_message(response[1]))
                 self.set_username(current_socket, username)
                 self.__conn_handler.add_connected_user(username, current_socket)
                 if not self.__is_primary and username in self.__backup_data.keys():
                     self.set_authorize(current_socket, self.__backup_data[username])
             else:
-                current_socket.sendall(Encryption_handler.encrypt(ChatProtocol.build_ok(response[1]),
-                                                                  self.get_public_key(current_socket)))
+                self.send_message(current_socket, ChatProtocol.build_ok_message(response[1]))
 
         elif command == WCONN_COMMAND and self.get_username(current_socket) is not None:  # send: wconn|ip|port recv:ok/error|response
             ip, port = data
