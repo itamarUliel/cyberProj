@@ -118,28 +118,33 @@ class ChatServer:
     def get_connected_and_authorized(self, conn):
         return self.__conn_handler.get_connected_and_authorized(conn)
 
+    def is_connected(self, user):
+        return self.__conn_handler.is_connected(user)
+
+    def is_authorized(self, source, target):
+        return self.__conn_handler.is_authorized(source, target)
+
+    def push_message(self, target, msg):
+        self.__conn_handler.push_message(target, msg)
+
     def sendto_msg(self, conn, send_to, msg):
-        if send_to in self.get_connected_users().keys():
+        if self.is_connected(send_to):
             print(DATA_COLOR + f"{self.get_username(conn)} wants to send {send_to} this: {msg}")
-            if send_to in self.get_authorize(conn):
+            if self.is_authorized(conn, send_to):
                 try:
-                    send_msg = ChatProtocol.build_msg(self.get_username(conn), msg) # msg|sender|{msg}
-                    target_user_connection = self.get_connected_users()[send_to]
-                    wconn = self.get_write_socket(target_user_connection)
-                    send_msg = Encryption_handler.encrypt(send_msg, self.get_public_key(target_user_connection))
-                    wconn.sendall(send_msg)
+                    self.push_message(send_to, ChatProtocol.build_push_msg(self.get_username(conn), msg)) # msg|sender|{msg}
                 except Exception as e:
                     print(e)
                     print(ERROR_COLOR + "error happened while sending, msg didn't send!")
                     return ChatProtocol.build_error_message("problem accrue while sending the msg")
                 else:
-                    print(OK_COLOR + "msg send!")
+                    print(OK_COLOR + "msg sent!")
                     return ChatProtocol.build_ok_message("msg send")
             else:
                 print(ERROR_COLOR + "user unauthorized to send!")
-                return ChatProtocol.build_error_message("the sender is not authorize to send to_send")
+                return ChatProtocol.build_error_message(f"the sender is not authorize to send {send_to}")
         else:
-            return ChatProtocol.build_error_message("to_send is not currently connected (or exist)")
+            return ChatProtocol.build_error_message(f"{send_to} is not currently connected (or exist)")
 
     def authorize(self, current_socket, to_authorize):
         if to_authorize not in self.get_connected_users().keys():

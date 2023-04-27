@@ -88,13 +88,28 @@ class ServerConnectionHandler:
     def get_connected_users(self):
         return self.__connected_users
 
+    def get_connected_user(self, username):
+        return self.__connected_users[username]
+
     def add_connected_user(self, username, user_socket):
         self.__connected_users[username] = user_socket
+
+    def is_connected(self, user):
+        return user in self.__connected_users.keys()
+
+    def is_authorized(self, source, target):
+        return target in self.get_authorize(source)
 
     def send_close_message(self, connection):
         self.get_write_socket(connection).sendall(Encryption_handler.encrypt(ChatProtocol.build_close_connection(),
                                                                              self.get_public_key(connection)))
         self.get_write_socket(connection).close()
+
+    def push_message(self, target, msg):
+        target_user_connection = self.get_connected_user(target)
+        wconn = self.get_write_socket(target_user_connection)
+        send_msg = Encryption_handler.encrypt(msg, self.get_public_key(target_user_connection))
+        wconn.sendall(send_msg)
 
     def clean_user_authorizations(self, username):
         authorization_found = False

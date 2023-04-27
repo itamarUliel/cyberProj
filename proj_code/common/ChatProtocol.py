@@ -77,7 +77,7 @@ class ChatProtocol:
         return data.split(DELIMITER)
 
     @staticmethod
-    def build_msg(from_user, msg):
+    def build_push_msg(from_user, msg):
         return f"{MSG_COMMAND}|{from_user}|{msg}"
 
     @staticmethod
