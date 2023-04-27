@@ -9,7 +9,6 @@ class ServerConnectionHandler:
         self.__address = address
         self.__prime = None          # prime server socket if self is backup server
         self.__prime_address = None  # prime server address if self is backup server
-        self.__server_keys = None
         self.__server_socket = None
         self.__conn_data = {}
         self.__connected_users = {}
@@ -21,15 +20,12 @@ class ServerConnectionHandler:
         self.__server_socket.listen()
         print(DATA_COLOR + "START_SERVER: LISTENING AT:", self.__address)
 
-        self.__server_keys = Encryption_handler.get_keys(KEY_SIZE)
-        print(OK_COLOR + "START_SERVER: server got keys!", end="\n\n")
-
-    def open_as_backup(self):
+    def open_as_backup(self, server_public_key):
         self.__prime, self.__address = self.__server_socket.accept()
-        self.__prime.sendall(Encryption_handler.save_public(self.get_server_keys()["pb"]))
+        self.__prime.sendall(Encryption_handler.save_public(server_public_key))
 
-    def get_backup_update(self):
-        return Encryption_handler.decrypt(self.__prime.recv(RECEIVE_SIZE), self.get_server_keys()["pr"])
+    def get_backup_update(self, server_private_key):
+        return Encryption_handler.decrypt(self.__prime.recv(RECEIVE_SIZE), server_private_key)
 
     def restart_as_primary(self):
         self.__prime.close()
@@ -40,12 +36,6 @@ class ServerConnectionHandler:
 
     def get_server_socket(self):
         return self.__server_socket
-
-    def get_server_keys(self):
-        return self.__server_keys
-
-    def get_private_key(self):
-        return self.__server_keys["pr"]
 
     def get_server_address(self):
         return self.__address
@@ -156,6 +146,9 @@ class ServerConnectionHandler:
 
     def set_write_socket(self, connection, write_socket):
         return self.__get_conn_data(connection).set_write_socket(write_socket)
+
+    def get_connected_and_authorized(self, conn):
+        return ChatProtocol.build_connected_and_authorized(self.get_connected_users(), self.get_authorize(conn))
 
     def build_msgs(self, msg, conn=None):
         if conn is None:

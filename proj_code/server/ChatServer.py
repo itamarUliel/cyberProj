@@ -17,6 +17,7 @@ class ChatServer:
         self.__update_chk = False
         self.__is_active = False
         self.__backup_data = None
+        self.__server_keys = None
 
         self.__conn_handler = ServerConnectionHandler(address)
         self.__backup_handler = BackupConnectionHandler()
@@ -35,15 +36,20 @@ class ChatServer:
         self.__backup_handler.connect()
 
     def start_server(self):
+        self.__server_keys = Encryption_handler.get_keys(KEY_SIZE)
+        print(OK_COLOR + "START_SERVER: server got keys!", end="\n\n")
         self.__conn_handler.start()
 
     def get_server_socket(self):
         return self.__conn_handler.get_server_socket()
 
-    def get_server_keys(self):
-        return self.__conn_handler.get_server_keys()
+    def __get_server_private_key(self):
+        return self.__server_keys["pr"]
 
-    def add_connection(self, connection, conn_data=False):
+    def __get_server_public_key(self):
+        return self.__server_keys["pb"]
+
+    def __add_connection(self, connection, conn_data=False):
         self.__conn_handler.add_connection(connection, conn_data)
 
     def __close_connection(self, connection):
@@ -91,9 +97,6 @@ class ChatServer:
     def get_connected_users(self):
         return self.__conn_handler.get_connected_users()
 
-    def update_connected_users(self, key, value):
-        self.__conn_handler.add_connected_user(key, value)
-
     def update_backup(self):
         self.__backup_handler.update(self.get_all_conn_data())
 
@@ -112,8 +115,8 @@ class ChatServer:
     def send_message(self, connection, msg):
         self.__conn_handler.send_message(connection, msg)
 
-    def connected(self, conn):
-        return [f'{",".join(self.get_connected_users())}', f'{",".join(self.get_authorize(conn))}']
+    def get_connected_and_authorized(self, conn):
+        return self.__conn_handler.get_connected_and_authorized(conn)
 
     def sendto_msg(self, conn, send_to, msg):
         if send_to in self.get_connected_users().keys():
@@ -164,7 +167,7 @@ class ChatServer:
                 current_socket.sendall(ChatProtocol.build_ok().encode())
                 key = current_socket.recv(RECEIVE_SIZE)
                 self.set_public_key(current_socket, Encryption_handler.load_public(key))
-                current_socket.sendall(Encryption_handler.save_public(self.get_server_keys()["pb"]))
+                current_socket.sendall(Encryption_handler.save_public(self.__get_server_public_key()))
                 self.set_status(current_socket, PENDING_CONNECTION_STATUS)
             else:
                 raise Exception
@@ -175,7 +178,7 @@ class ChatServer:
 
     def comm(self, current_socket, msg):
 
-        msg = Encryption_handler.decrypt(msg, self.get_server_keys()["pr"])
+        msg = Encryption_handler.decrypt(msg, self.__get_server_private_key())
         command, data = msg.split(DELIMITER)[0], msg.split(DELIMITER)[1:]
 
         if command == AUTHORIZE_COMMAND:  # authorize|us
@@ -186,7 +189,7 @@ class ChatServer:
             except ValueError:
                 pass
         elif command == CONNECTED_COMMAND:  # connected|
-            res = self.connected(current_socket)  # "[connected],[authorize]"
+            res = self.get_connected_and_authorized(current_socket)  # "[connected],[authorize]"
             self.send_message(current_socket, res)
 
         elif command == SEND_MESSAGE_COMMAND:  # sendto_msg|userToSend|msg
@@ -206,10 +209,10 @@ class ChatServer:
 
     def start_sync(self):
         try:
-            self.__conn_handler.open_as_backup()
+            self.__conn_handler.open_as_backup(self.__get_server_public_key())
             data = True
             while data:
-                data = self.__conn_handler.get_backup_update()
+                data = self.__conn_handler.get_backup_update(self.__get_server_private_key())
                 print(DATA_COLOR + f"got backup: {data}")
                 if data == "nothing to share.":
                     continue
@@ -220,7 +223,7 @@ class ChatServer:
             self.start_listening()
 
     def start_listening(self):
-        self.add_connection(self.get_server_socket())
+        self.__add_connection(self.get_server_socket())
         print(PENDING_COLOR + "LISTEN: listening started")
         while self.__conn_handler.get_connections_list():
             readable, writable, exceptional = select.select(self.__conn_handler.get_connections_list(), [], [])
@@ -229,7 +232,7 @@ class ChatServer:
                     # New connection
                     connection, client_address = current_socket.accept()
                     print(DATA_COLOR + f'LISTEN: new connection from {client_address}', end="\n\n")
-                    self.add_connection(connection, True)
+                    self.__add_connection(connection, True)
                 else:  # s.getpeername()
                     try:
                         data = current_socket.recv(RECEIVE_SIZE)
@@ -267,7 +270,7 @@ class ChatServer:
             return ChatProtocol.build_error_message("unable to connect, please check and send again")
 
     def pending(self, current_socket, msg):
-        msg = Encryption_handler.decrypt(msg, self.__conn_handler.get_private_key())
+        msg = Encryption_handler.decrypt(msg, self.__get_server_private_key())
         command, data = msg.split("|")[0], msg.split("|")[1:]
         if command == LOGIN_COMMAND:  # send: login|us|ps  # recv: ok/error|response
             # response = login(current_socket, data, self)
