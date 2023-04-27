@@ -105,6 +105,13 @@ class ServerConnectionHandler:
                                                                              self.get_public_key(connection)))
         self.get_write_socket(connection).close()
 
+    def connect_wconn(self, source, target_ip, target_port):
+        wconn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        wconn.connect((target_ip, int(target_port)))
+        self.set_write_socket(source, wconn)
+        wconn.sendall(Encryption_handler.encrypt(ChatProtocol.build_ok("the server connected 2 U, you can start recv msg!"),
+                                                 self.get_public_key(source)))
+
     def push_message(self, target, msg):
         target_user_connection = self.get_connected_user(target)
         wconn = self.get_write_socket(target_user_connection)
@@ -120,6 +127,12 @@ class ServerConnectionHandler:
             except ValueError:
                 continue
         return authorization_found
+
+    def share_public_keys(self, connection, server_public_key):
+        connection.sendall(ChatProtocol.build_ok().encode())
+        key = connection.recv(RECEIVE_SIZE)
+        self.set_public_key(connection, Encryption_handler.load_public(key))
+        connection.sendall(Encryption_handler.save_public(server_public_key))
 
     def get_connections_list(self):
         return self.__connections_list
