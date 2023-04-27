@@ -93,6 +93,7 @@ class ServerConnectionHandler:
 
     def add_connected_user(self, username, user_socket):
         self.__connected_users[username] = user_socket
+        self.__get_conn_data(user_socket).set_user(username)
 
     def is_connected(self, user):
         return user in self.__connected_users.keys()
@@ -144,9 +145,6 @@ class ServerConnectionHandler:
 
     def get_username(self, connection):
         return self.__get_conn_data(connection).get_user()
-
-    def set_username(self, connection, username):
-        return self.__get_conn_data(connection).set_user(username)
 
     def get_authorize(self, connection):
         return self.__get_conn_data(connection).get_authorize()

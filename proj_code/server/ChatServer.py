@@ -55,17 +55,8 @@ class ChatServer:
     def __close_connection(self, connection):
         return self.__conn_handler.close_connection(connection)
 
-    def get_all_conn_data(self):
-        return self.__conn_handler.get_all_conn_data()
-
-    def get_is_primary(self):
-        return self.__is_primary
-
     def get_username(self, connection):
         return self.__conn_handler.get_username(connection)
-
-    def set_username(self, connection, username):
-        return self.__conn_handler.set_username(connection, username)
 
     def get_status(self, connection):
         return self.__conn_handler.get_status(connection)
@@ -94,11 +85,8 @@ class ChatServer:
     def set_write_socket(self, connection, write_socket):
         return self.__conn_handler.set_write_socket(connection, write_socket)
 
-    def get_connected_users(self):
-        return self.__conn_handler.get_connected_users()
-
     def update_backup(self):
-        self.__backup_handler.update(self.get_all_conn_data())
+        self.__backup_handler.update(self.__conn_handler.get_all_conn_data())
 
     def print_connected_users(self):
         print(DATA_COLOR + f"""Connected users: {self.__conn_handler.get_connected_users()}""", end="\n\n")
@@ -173,7 +161,7 @@ class ChatServer:
         else:
             return ChatProtocol.build_error_message("user already authorize to send")
 
-    def encrypt(self, current_socket: socket.socket, msg):
+    def encrypt(self, current_socket, msg):
         command, data = msg.split("|")[0], msg.split("|")[1:]
         try:
             if command == START_ENCRYPT_COMMAND:  # s: start_enc| r: ok| s: client_key r: server_key
@@ -211,6 +199,40 @@ class ChatServer:
             print(ERROR_COLOR + f"{self.get_username(current_socket)} ask to close, closing...")
             self.handle_close(current_socket)
 
+        else:
+            self.send_message(current_socket, ChatProtocol.build_error_message("illegible command, closing connection"))
+            print(ERROR_COLOR + f"{current_socket.getpeername()} is unknown and broke protocol, closing...")
+            self.handle_close(current_socket)
+
+
+    def pending(self, current_socket, msg):
+        msg = Encryption_handler.decrypt(msg, self.__get_server_private_key())
+        command, data = ChatProtocol.parse_command(msg)
+        if command == LOGIN_COMMAND:  # send: login|us|ps  # recv: ok/error|response
+            # response = login(current_socket, data, self)
+            username, pwd = data
+            response = self.__user_handler.login(username, pwd)
+            print(DATA_COLOR + "LOGIN: the login try went: ", response[1])
+            if response[0]:
+                self.send_message(current_socket, ChatProtocol.build_ok_message(response[1]))
+                self.__conn_handler.add_connected_user(username, current_socket)
+                if not self.__is_primary and username in self.__backup_data.keys():
+                    self.set_authorize(current_socket, self.__backup_data[username])
+            else:
+                self.send_message(current_socket, ChatProtocol.build_ok_message(response[1]))
+
+        elif command == WCONN_COMMAND and self.get_username(current_socket) is not None:  # send: wconn|ip|port recv:ok/error|response
+            ip, port = data
+            res = self.connect_wconn(current_socket, ip, port)
+            self.send_message(current_socket, res)
+            if ChatProtocol.is_ok_status(res):
+                self.set_status(current_socket, COMM_CONNECTION_STATUS)
+                print(DATA_COLOR + f"{self.get_username(current_socket)} is now ready to comm!")
+
+        elif command == CLOSE_COMMAND:  # send: close|
+            print(ERROR_COLOR + f"{current_socket.getpeername()} ask to close, closing...")
+            self.send_message(current_socket, ChatProtocol.build_ok_message())
+            self.handle_close(current_socket)
         else:
             self.send_message(current_socket, ChatProtocol.build_error_message("illegible command, closing connection"))
             print(ERROR_COLOR + f"{current_socket.getpeername()} is unknown and broke protocol, closing...")
@@ -268,38 +290,3 @@ class ChatServer:
                 except ConnectionResetError:
                     print(ERROR_COLOR + "couldnt backup")
                     self.__update_chk = False
-
-    def pending(self, current_socket, msg):
-        msg = Encryption_handler.decrypt(msg, self.__get_server_private_key())
-        command, data = ChatProtocol.parse_command(msg)
-        if command == LOGIN_COMMAND:  # send: login|us|ps  # recv: ok/error|response
-            # response = login(current_socket, data, self)
-            username, pwd = data
-            response = self.__user_handler.login(username, pwd)
-            print(DATA_COLOR + "LOGIN: the login try went: ", response[1])
-            if response[0]:
-                self.send_message(current_socket, ChatProtocol.build_ok_message(response[1]))
-                self.set_username(current_socket, username)
-                self.__conn_handler.add_connected_user(username, current_socket)
-                if not self.__is_primary and username in self.__backup_data.keys():
-                    self.set_authorize(current_socket, self.__backup_data[username])
-            else:
-                self.send_message(current_socket, ChatProtocol.build_ok_message(response[1]))
-
-        elif command == WCONN_COMMAND and self.get_username(current_socket) is not None:  # send: wconn|ip|port recv:ok/error|response
-            ip, port = data
-            res = self.connect_wconn(current_socket, ip, port)
-            self.send_message(current_socket, res)
-            if ChatProtocol.is_ok_status(res):
-                self.set_status(current_socket, COMM_CONNECTION_STATUS)
-                print(DATA_COLOR + f"{self.get_username(current_socket)} is now ready to comm!")
-
-        elif command == CLOSE_COMMAND:  # send: close|
-            print(ERROR_COLOR + f"{current_socket.getpeername()} ask to close, closing...")
-            self.send_message(current_socket, ChatProtocol.build_ok_message())
-            self.handle_close(current_socket)
-        else:
-            self.send_message(current_socket, ChatProtocol.build_error_message("illegible command, closing connection"))
-            print(ERROR_COLOR + f"{current_socket.getpeername()} is unknown and broke protocol, closing...")
-            self.handle_close(current_socket)
-
