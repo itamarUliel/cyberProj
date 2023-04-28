@@ -158,7 +158,7 @@ class ChatServer:
                 self.update_authorize(current_socket, to_authorize)
                 return ChatProtocol.build_ok_message(f"the server accepted your conn to {to_authorize}")
         else:
-            return ChatProtocol.build_error_message("user already authorize to send")
+            return ChatProtocol.build_ok_message("user already authorize to send")
 
     def encrypt(self, current_socket, msg):
         command, data = msg.split("|")[0], msg.split("|")[1:]
@@ -203,12 +203,10 @@ class ChatServer:
             print(ERROR_COLOR + f"{current_socket.getpeername()} is unknown and broke protocol, closing...")
             self.handle_close(current_socket)
 
-
     def pending(self, current_socket, msg):
         msg = Encryption_handler.decrypt(msg, self.__get_server_private_key())
         command, data = ChatProtocol.parse_command(msg)
         if command == LOGIN_COMMAND:  # send: login|us|ps  # recv: ok/error|response
-            # response = login(current_socket, data, self)
             username, pwd = data
             response = self.__user_handler.login(username, pwd)
             print(DATA_COLOR + "LOGIN: the login try went: ", response[1])
@@ -218,7 +216,7 @@ class ChatServer:
                 if not self.__is_primary and username in self.__backup_data.keys():
                     self.set_authorize(current_socket, self.__backup_data[username])
             else:
-                self.send_message(current_socket, ChatProtocol.build_ok_message(response[1]))
+                self.send_message(current_socket, ChatProtocol.build_error_message(response[1]))
 
         elif command == WCONN_COMMAND and self.get_username(current_socket) is not None:  # send: wconn|ip|port recv:ok/error|response
             ip, port = data

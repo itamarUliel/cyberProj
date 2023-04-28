@@ -65,7 +65,7 @@ class ClientConnectionHandler:
                     data = self.__chat_server.recv(MSG_SIZE)
                     return data.decode()
                 except Exception:
-                    return data
+                    return data # YYY
             else:
                 return Encryption_handler.decrypt(self.__chat_server.recv(MSG_SIZE), self.__client_keys["pr"])
 
