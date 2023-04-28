@@ -18,6 +18,7 @@ class ChatServer:
         self.__is_active = False
         self.__backup_data = None
         self.__server_keys = None
+        self.__has_backup = False
 
         self.__conn_handler = ServerConnectionHandler(address)
         self.__backup_handler = BackupConnectionHandler()
@@ -27,13 +28,13 @@ class ChatServer:
     def start_running(self):
         self.start_server()
         if self.__is_primary:
-            self.connect_backup()
+            self.__has_backup = self.connect_backup()
             self.start_listening()
         else:
             self.start_sync()
 
     def connect_backup(self):
-        self.__backup_handler.connect()
+        return self.__backup_handler.connect()
 
     def start_server(self):
         self.__server_keys = Encryption_handler.get_keys(KEY_SIZE)
@@ -282,7 +283,7 @@ class ChatServer:
                         print(ERROR_COLOR + f'\n\nclosing {current_socket.getpeername()}, he died')
                         # Stop listening for input on the connection
                         self.handle_close(current_socket)
-            if self.__is_primary and self.__update_chk:
+            if self.__is_primary and self.__update_chk and self.__has_backup:
                 try:
                     self.__update_chk = not self.update_backup()
                 except ConnectionResetError:

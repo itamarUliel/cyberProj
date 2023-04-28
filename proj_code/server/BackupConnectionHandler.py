@@ -26,11 +26,15 @@ class BackupConnectionHandler:
         return backup
 
     def connect(self):
-        self.__backup_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__backup_socket.connect(SECONDARY_ADDRESS)
-        self.__backup_public_key = Encryption_handler.load_public(self.__backup_socket.recv(RECEIVE_SIZE))
-        print(OK_COLOR + "backup is connected!")
-
+        try:
+            self.__backup_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.__backup_socket.connect(SECONDARY_ADDRESS)
+            self.__backup_public_key = Encryption_handler.load_public(self.__backup_socket.recv(RECEIVE_SIZE))
+            print(OK_COLOR + "backup is connected!")
+            return True
+        except ConnectionRefusedError:
+            print(ERROR_COLOR + "couldnt connect backup, running without it")
+            return False
     def update(self, connections_update):
         backup_updated = False
         try:
