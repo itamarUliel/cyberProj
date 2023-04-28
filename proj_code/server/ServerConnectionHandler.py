@@ -184,3 +184,6 @@ class ServerConnectionHandler:
 
     def send_message(self, connection, msg):
         connection.sendall(self.build_msgs(msg, connection))
+
+    def print_connected_users(self):
+        print(DATA_COLOR + f"""Connected users: {self.get_connected_users()}""", end="\n\n")

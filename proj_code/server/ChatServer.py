@@ -89,14 +89,13 @@ class ChatServer:
         self.__backup_handler.update(self.__conn_handler.get_all_conn_data())
 
     def print_connected_users(self):
-        print(DATA_COLOR + f"""Connected users: {self.__conn_handler.get_connected_users()}""", end="\n\n")
+        self.__conn_handler.print_connected_users()
 
     def handle_close(self, connection):
         username = self.get_username(connection)
 
         self.__update_chk = self.__close_connection(connection)
         self.__user_handler.close_user(username)
-
         print(OK_COLOR + "\n\nHANDLE_CLOSE: done closing!")
         self.print_connected_users()
 
