@@ -1,7 +1,5 @@
 import socket
 from proj_code.common import *
-
-
 class BackupConnectionHandler:
 
     def __init__(self):
