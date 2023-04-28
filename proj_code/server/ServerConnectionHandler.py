@@ -119,6 +119,9 @@ class ServerConnectionHandler:
         send_msg = Encryption_handler.encrypt(msg, self.get_public_key(target_user_connection))
         wconn.sendall(send_msg)
 
+    def receive_message(self, connection: socket.socket):
+        return connection.recv(RECEIVE_SIZE)
+
     def clean_user_authorizations(self, username):
         authorization_found = False
         for user in self.get_all_connected_users():

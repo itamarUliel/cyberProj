@@ -91,6 +91,9 @@ class ChatServer:
     def print_connected_users(self):
         self.__conn_handler.print_connected_users()
 
+    def receive_message(self, connection):
+        return self.__conn_handler.receive_message(connection)
+
     def handle_close(self, connection):
         username = self.get_username(connection)
 
@@ -161,7 +164,7 @@ class ChatServer:
             return ChatProtocol.build_ok_message("user already authorize to send")
 
     def encrypt(self, current_socket, msg):
-        command, data = msg.split("|")[0], msg.split("|")[1:]
+        command, data = ChatProtocol.parse_command(msg)
         try:
             if command == START_ENCRYPT_COMMAND:  # s: start_enc| r: ok| s: client_key r: server_key
                 self.__conn_handler.share_public_keys(current_socket, self.__get_server_public_key())
@@ -266,7 +269,7 @@ class ChatServer:
                     self.__add_connection(connection, True)
                 else:  # s.getpeername()
                     try:
-                        data = current_socket.recv(RECEIVE_SIZE)
+                        data = self.receive_message(current_socket)
                         if data:
                             if self.get_status(current_socket) == ENCRYPT_CONNECTION_STATUS:
                                 self.encrypt(current_socket, data.decode())
