@@ -4,7 +4,7 @@ import logging
 from connection_utils import *
 from time import sleep
 from ChatProtocol import *
-from proj_code.common import Encryption_handler
+from proj_code.common import EncryptionUtils
 
 
 class ConnectionHandler:
@@ -28,7 +28,7 @@ class ConnectionHandler:
         logging.info(f"{server_type} connected")
 
     def __init__(self):
-        self.__client_keys = Encryption_handler.get_keys()
+        self.__client_keys = EncryptionUtils.get_keys()
         self.__server_public_key = None
 
         self.__servers_addresses = {PRIMARY_NAME: ConnectionHandler.get_server_address(PRIMARY_NAME),
@@ -67,13 +67,13 @@ class ConnectionHandler:
         if not to_enc:
             self.__get_server().send(msg.encode())
         else:
-            self.__get_server().send(Encryption_handler.encrypt(msg, self.__server_public_key))
+            self.__get_server().send(EncryptionUtils.encrypt(msg, self.__server_public_key))
 
     def __receive_message(self, to_decrypt=True):
         if not to_decrypt:
             return self.__get_server().recv(MSG_SIZE)
         else:
-            return Encryption_handler.decrypt(self.__get_server().recv(MSG_SIZE), self.__client_keys["pr"])
+            return EncryptionUtils.decrypt(self.__get_server().recv(MSG_SIZE), self.__client_keys["pr"])
 
     def login(self, username, pwd):
         try:
@@ -131,8 +131,8 @@ class ConnectionHandler:
         if status != OK_STATUS:
             logging.error(f"error while replacing keys. msg: {msg}")
             raise Exception
-        self.__send_message(Encryption_handler.save_public(self.__keys["pb"]), False)
-        self.__server_public_key = Encryption_handler.load_public(self.__receive_message(False))
+        self.__send_message(EncryptionUtils.save_public(self.__keys["pb"]), False)
+        self.__server_public_key = EncryptionUtils.load_public(self.__receive_message(False))
 
 
 def main():

@@ -52,8 +52,10 @@ def put_new_server():
         if primary_server is None:
             primary_server = (server_address[0], int(server_address[1]))
             resp = make_response("primary", 200)
+            print(f"Added {server_address} as primary")
         elif backup_server is None:
             backup_server = (server_address[0], int(server_address[1]))
+            print(f"Added {server_address} as backup")
             resp = make_response("backup", 200)
         else:
             resp = make_response("Your service is not currently needed please try again later", 409)

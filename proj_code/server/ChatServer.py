@@ -1,8 +1,10 @@
 import select
+from threading import Thread
 
 from proj_code.server import *
 from proj_code.server.ServerConnectionHandler import ServerConnectionHandler
 from proj_code.server.BackupConnectionHandler import BackupConnectionHandler
+from proj_code.common import *
 from proj_code.common import ChatProtocol
 
 ENCRYPT_CONNECTION_STATUS = "encrypt"
@@ -11,14 +13,14 @@ COMM_CONNECTION_STATUS = "comm"
 
 class ChatServer:
 
-    def __init__(self, is_primary, address):
+    def __init__(self, address):
 
-        self.__is_primary = is_primary
+        self.__is_primary = None
         self.__update_chk = False
         self.__is_active = False
         self.__backup_data = None
         self.__server_keys = None
-        self.__has_backup = False
+        self.__backup_thread = None
 
         self.__conn_handler = ServerConnectionHandler(address)
         self.__backup_handler = BackupConnectionHandler()
@@ -27,17 +29,21 @@ class ChatServer:
 
     def start_running(self):
         self.start_server()
+        self.register_server()
         if self.__is_primary:
-            self.__has_backup = self.connect_backup()
+            self.connect_backup()
             self.start_listening()
         else:
             self.start_sync()
 
+    def register_server(self):
+        self.__is_primary = self.__conn_handler.register_server()
+
     def connect_backup(self):
-        return self.__backup_handler.connect()
+        self.__backup_thread = Thread(target=BackupConnectionHandler.connect, args=[self.__backup_handler]).start()
 
     def start_server(self):
-        self.__server_keys = Encryption_handler.get_keys(KEY_SIZE)
+        self.__server_keys = EncryptionUtils.get_keys(KEY_SIZE)
         print(OK_COLOR + "START_SERVER: server got keys!", end="\n\n")
         self.__conn_handler.start()
 
@@ -179,7 +185,7 @@ class ChatServer:
 
     def comm(self, current_socket, msg):
 
-        msg = Encryption_handler.decrypt(msg, self.__get_server_private_key())
+        msg = EncryptionUtils.decrypt(msg, self.__get_server_private_key())
         command, data = ChatProtocol.parse_command(msg)
 
         if command == AUTHORIZE_COMMAND:  # authorize|us
@@ -208,7 +214,7 @@ class ChatServer:
             self.handle_close(current_socket)
 
     def pending(self, current_socket, msg):
-        msg = Encryption_handler.decrypt(msg, self.__get_server_private_key())
+        msg = EncryptionUtils.decrypt(msg, self.__get_server_private_key())
         command, data = ChatProtocol.parse_command(msg)
         if command == LOGIN_COMMAND:  # send: login|us|ps  # recv: ok/error|response
             username, pwd = data
@@ -285,7 +291,8 @@ class ChatServer:
                         print(ERROR_COLOR + f'\n\nclosing {current_socket.getpeername()}, he died')
                         # Stop listening for input on the connection
                         self.handle_close(current_socket)
-            if self.__is_primary and self.__update_chk and self.__has_backup:
+            print("dwdwdd", self.__backup_handler.is_backed_up())
+            if self.__is_primary and self.__update_chk and self.__backup_handler.is_backed_up():
                 try:
                     self.__update_chk = not self.update_backup()
                 except ConnectionResetError:

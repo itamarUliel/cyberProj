@@ -5,7 +5,10 @@ from proj_code.connection import *
 from proj_code.common.colors import *
 
 
-class ConnectionServer:
+
+class ConnectionUtils:
+    PRIMARY_RESPONSE = "primary"
+    BACKUP_RESPONSE = "backup"
     @staticmethod
     def get_chat_server_address():
         while True:
@@ -73,9 +76,10 @@ class ConnectionServer:
                 time.sleep(5)
 
     @staticmethod
-    def put_new_server(ip, port):
+    def put_new_server(address):
         while True:
             try:
+                ip, port = address
                 response = requests.put(f"http://{CONNECTION_SERVER_IP}:{CONNECTION_SERVER_PORT}/new_server"
                                         ,data=f"{ip}:{port}")
                 if response.status_code == 200:
@@ -114,46 +118,46 @@ class ConnectionServer:
 def test():
     print(DATA_COLOR + "utils demo", PENDING_COLOR + "work only on unused conn server.")
     print(OK_COLOR + "new server putting:")
-    resp = ConnectionServer.put_new_server("127.0.0.1", 4545)
+    resp = ConnectionUtils.put_new_server("127.0.0.1", 4545)
     print(resp)
     if resp == "primary":
-        print(ConnectionServer.get_chat_server_address())
+        print(ConnectionUtils.get_chat_server_address())
     else:
         raise Exception
 
-    resp = ConnectionServer.put_new_server("127.0.0.1", 4444)
+    resp = ConnectionUtils.put_new_server("127.0.0.1", 4444)
     print(resp)
     if resp == "backup":
-        print(ConnectionServer.get_backup_server_address())
+        print(ConnectionUtils.get_backup_server_address())
     else:
         raise Exception
 
-    resp = ConnectionServer.put_new_server("127.0.0.1", 7777)
+    resp = ConnectionUtils.put_new_server("127.0.0.1", 7777)
     print(resp, "\n")
 
     print(OK_COLOR + "backup freeing:")
-    ConnectionServer.put_free_backup()
-    print(ConnectionServer.get_backup_server_address(), "\n")
+    ConnectionUtils.put_free_backup()
+    print(ConnectionUtils.get_backup_server_address(), "\n")
 
     print(OK_COLOR + "resseting backup for switch demo:")
-    resp = ConnectionServer.put_new_server("127.0.0.1", 76767)
+    resp = ConnectionUtils.put_new_server("127.0.0.1", 76767)
     print(resp)
     if resp == "backup":
-        print(ConnectionServer.get_backup_server_address(), "\n")
+        print(ConnectionUtils.get_backup_server_address(), "\n")
     else:
         raise Exception
 
     print(OK_COLOR + "switching now:")
-    print(ConnectionServer.get_chat_server_address())
-    print(ConnectionServer.get_backup_server_address())
-    ConnectionServer.put_switch_servers()
-    print(ConnectionServer.get_chat_server_address())
-    print(ConnectionServer.get_backup_server_address())
+    print(ConnectionUtils.get_chat_server_address())
+    print(ConnectionUtils.get_backup_server_address())
+    ConnectionUtils.put_switch_servers()
+    print(ConnectionUtils.get_chat_server_address())
+    print(ConnectionUtils.get_backup_server_address())
     print(OK_COLOR + "adding backup")
-    resp = ConnectionServer.put_new_server("127.0.0.1", 9999)
+    resp = ConnectionUtils.put_new_server("127.0.0.1", 9999)
     print(resp)
     if resp == "backup":
-        print(ConnectionServer.get_backup_server_address())
+        print(ConnectionUtils.get_backup_server_address())
     else:
         raise Exception
 def main():

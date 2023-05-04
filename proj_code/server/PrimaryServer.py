@@ -3,7 +3,7 @@ from proj_code.common import *
 
 
 def main():
-    prime = ChatServer(True, PRIMARY_ADDRESS)
+    prime = ChatServer(PRIMARY_ADDRESS)
     prime.start_running()
 
 

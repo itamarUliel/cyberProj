@@ -11,13 +11,13 @@ class ClientConnectionHandler:
     def __init__(self):
         self.__chat_server = self.__connect_chat_server()
         self.__server_public_key = None
-        self.__client_keys = Encryption_handler.get_keys()
+        self.__client_keys = EncryptionUtils.get_keys()
         self.__wconn_socket = None
 
     @staticmethod
     def __connect_chat_server():
         chat_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_address = ConnectionServer.get_chat_server_address()
+        server_address = ConnectionUtils.get_chat_server_address()
         while True:
             try:
                 chat_server.connect(server_address)
@@ -37,7 +37,7 @@ class ClientConnectionHandler:
 
     def do_listen(self, conn):
         try:
-            return Encryption_handler.decrypt(conn.recv(MSG_SIZE), self.__client_keys["pr"])
+            return EncryptionUtils.decrypt(conn.recv(MSG_SIZE), self.__client_keys["pr"])
         except ConnectionResetError:
             print("the main server is down. closing connection")
             self.close_connection()
@@ -54,7 +54,7 @@ class ClientConnectionHandler:
                 except AttributeError:
                     self.__chat_server.send(msg)
             else:
-                self.__chat_server.send(Encryption_handler.encrypt(msg, self.__server_public_key))
+                self.__chat_server.send(EncryptionUtils.encrypt(msg, self.__server_public_key))
         except ConnectionError:
             self.__reconnect_server()
 
@@ -67,7 +67,7 @@ class ClientConnectionHandler:
                 except Exception:
                     return data # YYY
             else:
-                return Encryption_handler.decrypt(self.__chat_server.recv(MSG_SIZE), self.__client_keys["pr"])
+                return EncryptionUtils.decrypt(self.__chat_server.recv(MSG_SIZE), self.__client_keys["pr"])
 
         except ConnectionError:
             self.__reconnect_server()
@@ -106,8 +106,8 @@ class ClientConnectionHandler:
         if status != OK_STATUS:
             logging.error(f"error while replacing keys. msg: {msg}")
             raise Exception
-        self.__send_message(Encryption_handler.save_public(self.__client_keys["pb"]), False)
-        self.__server_public_key = Encryption_handler.load_public(self.__receive_message(False))
+        self.__send_message(EncryptionUtils.save_public(self.__client_keys["pb"]), False)
+        self.__server_public_key = EncryptionUtils.load_public(self.__receive_message(False))
 
     def authorize(self, username):
         try:

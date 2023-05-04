@@ -2,6 +2,7 @@ import socket
 
 from proj_code.common import *
 from proj_code.server import ConnectionData
+import time
 
 
 class ServerConnectionHandler:
@@ -22,10 +23,10 @@ class ServerConnectionHandler:
 
     def open_as_backup(self, server_public_key):
         self.__prime, self.__address = self.__server_socket.accept()
-        self.__prime.sendall(Encryption_handler.save_public(server_public_key))
+        self.__prime.sendall(EncryptionUtils.save_public(server_public_key))
 
     def get_backup_update(self, server_private_key):
-        return Encryption_handler.decrypt(self.__prime.recv(RECEIVE_SIZE), server_private_key)
+        return EncryptionUtils.decrypt(self.__prime.recv(RECEIVE_SIZE), server_private_key)
 
     def restart_as_primary(self):
         self.__prime.close()
@@ -102,7 +103,7 @@ class ServerConnectionHandler:
         return target in self.get_authorize(source)
 
     def send_close_message(self, connection):
-        self.get_write_socket(connection).sendall(Encryption_handler.encrypt(ChatProtocol.build_close_connection(),
+        self.get_write_socket(connection).sendall(EncryptionUtils.encrypt(ChatProtocol.build_close_connection(),
                                                                              self.get_public_key(connection)))
         self.get_write_socket(connection).close()
 
@@ -110,13 +111,13 @@ class ServerConnectionHandler:
         wconn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         wconn.connect((target_ip, int(target_port)))
         self.set_write_socket(source, wconn)
-        wconn.sendall(Encryption_handler.encrypt(ChatProtocol.build_ok("the server connected 2 U, you can start recv msg!"),
+        wconn.sendall(EncryptionUtils.encrypt(ChatProtocol.build_ok("the server connected 2 U, you can start recv msg!"),
                                                  self.get_public_key(source)))
 
     def push_message(self, target, msg):
         target_user_connection = self.get_connected_user(target)
         wconn = self.get_write_socket(target_user_connection)
-        send_msg = Encryption_handler.encrypt(msg, self.get_public_key(target_user_connection))
+        send_msg = EncryptionUtils.encrypt(msg, self.get_public_key(target_user_connection))
         wconn.sendall(send_msg)
 
     def receive_message(self, connection: socket.socket):
@@ -135,8 +136,8 @@ class ServerConnectionHandler:
     def share_public_keys(self, connection, server_public_key):
         connection.sendall(ChatProtocol.build_ok().encode())
         key = connection.recv(RECEIVE_SIZE)
-        self.set_public_key(connection, Encryption_handler.load_public(key))
-        connection.sendall(Encryption_handler.save_public(server_public_key))
+        self.set_public_key(connection, EncryptionUtils.load_public(key))
+        connection.sendall(EncryptionUtils.save_public(server_public_key))
 
     def get_connections_list(self):
         return self.__connections_list
@@ -183,10 +184,22 @@ class ServerConnectionHandler:
         if conn is None:
             return DELIMITER.join(msg).encode()
         else:
-            return Encryption_handler.encrypt(DELIMITER.join(msg), self.get_public_key(conn))
+            return EncryptionUtils.encrypt(DELIMITER.join(msg), self.get_public_key(conn))
 
     def send_message(self, connection, msg):
         connection.sendall(self.build_msgs(msg, connection))
 
     def print_connected_users(self):
         print(DATA_COLOR + f"""Connected users: {self.get_connected_users()}""", end="\n\n")
+
+    def register_server(self):
+        resp = None
+        while resp is None:
+            resp = ConnectionUtils.put_new_server(self.__address)
+            if resp == ConnectionUtils.PRIMARY_RESPONSE:
+                return True
+            elif resp == ConnectionUtils.BACKUP_RESPONSE:
+                return False
+            elif resp is None:
+                print(ERROR_COLOR + "Unable to register, Retry in 5 sec")
+                time.sleep(5)
