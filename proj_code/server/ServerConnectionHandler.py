@@ -19,6 +19,7 @@ class ServerConnectionHandler:
         self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__server_socket.bind(self.__address)
         self.__server_socket.listen()
+        self.__address = self.__server_socket.getsockname()
         print(DATA_COLOR + "START_SERVER: LISTENING AT:", self.__address)
 
     def open_as_backup(self, server_public_key):
