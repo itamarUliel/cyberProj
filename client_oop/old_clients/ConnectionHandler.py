@@ -4,7 +4,7 @@ import logging
 from connection_utils import *
 from time import sleep
 from ChatProtocol import *
-import Encryption_handler
+from proj_code.common import Encryption_handler
 
 
 class ConnectionHandler:

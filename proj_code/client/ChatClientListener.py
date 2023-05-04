@@ -12,7 +12,7 @@ class ChatClientListener:
             if command == OK_STATUS:
                 print(data[0])
             elif command == MSG_COMMAND:
-                print(f"got msg from {data[0]}: {data[1]}")
+                print(DATA_COLOR + f"got msg from {data[0]}:", PENDING_COLOR + f"{data[1]}")
             elif command == CLOSE_COMMAND:
                 connection_handler.close_connection()
                 exit("the server close the connection with the wconn")
