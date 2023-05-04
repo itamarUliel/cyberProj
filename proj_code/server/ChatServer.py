@@ -293,7 +293,6 @@ class ChatServer:
                         print(ERROR_COLOR + f'\n\nclosing {current_socket.getpeername()}, he died')
                         # Stop listening for input on the connection
                         self.handle_close(current_socket)
-            print("dwdwdd", self.__backup_handler.is_backed_up())
             if self.__is_primary and self.__update_chk and self.__backup_handler.is_backed_up():
                 try:
                     self.__update_chk = not self.update_backup()
