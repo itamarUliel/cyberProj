@@ -25,10 +25,6 @@ class ChatProtocol:
         return data.split(DELIMITER)
 
     @staticmethod
-    def parse_push_message(msg):
-        return msg.split(DELIMITER)[0], msg.split(DELIMITER)[1:]
-
-    @staticmethod
     def parse_command(msg):
         return msg.split(DELIMITER)[0], msg.split(DELIMITER)[1:]
 
