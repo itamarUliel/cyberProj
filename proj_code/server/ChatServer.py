@@ -42,7 +42,7 @@ class ChatServer:
         self.__is_primary = self.__conn_handler.register_server()
 
     def connect_backup(self):
-        self.__backup_thread = Thread(target=BackupConnectionHandler.connect, args=[self.__backup_handler]).start()
+        self.__backup_thread = Thread(target=BackupConnectionHandler.connect, args=[self.__backup_handler, self.__conn_handler.get_all_conn_data()]).start()
 
     def start_server(self):
         self.__server_keys = EncryptionUtils.get_keys(KEY_SIZE)
@@ -95,7 +95,7 @@ class ChatServer:
         return self.__conn_handler.set_write_socket(connection, write_socket)
 
     def update_backup(self):
-        self.__backup_handler.update(self.__conn_handler.get_all_conn_data())
+        return self.__backup_handler.update(self.__conn_handler.get_all_conn_data())
 
     def print_connected_users(self):
         self.__conn_handler.print_connected_users()
@@ -248,6 +248,7 @@ class ChatServer:
             self.handle_close(current_socket)
 
     def switch_servers(self):
+        ConnectionUtils.put_switch_servers()
         self.__conn_handler.restart_as_primary()
 
     def start_sync(self):
@@ -294,11 +295,10 @@ class ChatServer:
                         # Stop listening for input on the connection
                         self.handle_close(current_socket)
             if self.__is_primary and self.__update_chk and self.__backup_handler.is_backed_up():
-                try:
-                    self.__update_chk = not self.update_backup()
-                except ConnectionResetError:
-                    print(ERROR_COLOR + "couldnt backup")
-                    self.__update_chk = False
+                self.__update_chk = not self.update_backup()
+                if self.__update_chk is True:
+                    ConnectionUtils.put_free_backup()
+                    self.connect_backup()
 
 
 def main(ip=DEFAULT_IP, port=0):
@@ -311,12 +311,4 @@ if __name__ == '__main__':
     parser.add_argument('--ip', type=str)
     parser.add_argument('--port', type=int)
     args = parser.parse_args()
-
-    if args.ip is not None:
-        if args.port is not None:
-            main(args.ip, args.port)
-        else:
-            main(args.ip)
-    else:
-        main()
-
+    main(args.ip if args.ip is not None else DEFAULT_IP, args.port if args.port is not None else 0)

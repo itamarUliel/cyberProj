@@ -83,6 +83,7 @@ class ConnectionUtils:
                 response = requests.put(f"http://{CONNECTION_SERVER_IP}:{CONNECTION_SERVER_PORT}/new_server"
                                         ,data=f"{ip}:{port}")
                 if response.status_code == 200:
+                    print(OK_COLOR + f"registered as {response.content.decode().upper()}")
                     return response.content.decode()
                 elif response.status_code == 409:
                     print(response.content.decode())

@@ -23,7 +23,7 @@ class ServerConnectionHandler:
         print(DATA_COLOR + "START_SERVER: LISTENING AT:", self.__address)
 
     def open_as_backup(self, server_public_key):
-        self.__prime, self.__address = self.__server_socket.accept()
+        self.__prime = self.__server_socket.accept()[0]  # take only the socket of prime (and 'throw' the socket address)
         self.__prime.sendall(EncryptionUtils.save_public(server_public_key))
 
     def get_backup_update(self, server_private_key):
