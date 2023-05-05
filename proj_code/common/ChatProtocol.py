@@ -41,10 +41,6 @@ class ChatProtocol:
         return f'{OK_STATUS}|{msg}'
 
     @staticmethod
-    def build_error(msg=""):
-        return f'{ERROR_STATUS}|{msg}'
-
-    @staticmethod
     def build_get_connected_users():
         return f"{CONNECTED_COMMAND}{DELIMITER}"
 
