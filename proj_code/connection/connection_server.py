@@ -1,5 +1,7 @@
 from flask import Flask, make_response, request, abort
-
+import keyboard
+import threading
+from proj_code.common.colors import *
 app = Flask(__name__)
 
 PRIMARY_IP = "127.0.0.1"
@@ -11,6 +13,15 @@ DEFAULT_PRIMARY = f"{PRIMARY_IP}:{PRIMARY_PORT}"
 
 primary_server = None
 backup_server = None
+
+
+def resting():
+    global primary_server, backup_server
+    while True:
+        event = keyboard.read_event()
+        if event.name == 'esc' and event.event_type == 'down':
+            print(DATA_COLOR + "servers reset! (will not work for old servers)")
+            primary_server, backup_server = None, None
 
 
 @app.route("/chat_server", methods=['GET'])
@@ -112,4 +123,6 @@ def switch_servers():
 
 
 if __name__ == '__main__':
+    print(PENDING_COLOR + "to reset connection servers registered server press 'esc'", ERROR_COLOR + "DO NOT USE WHILE COMMUNICATING")
+    threading.Thread(target=resting).start()
     app.run()
