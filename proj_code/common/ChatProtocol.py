@@ -83,3 +83,29 @@ class ChatProtocol:
     @staticmethod
     def build_backup(ip, port):
         return f"{BACKUP_COMMAND}|{ip}|{port}"
+
+    @staticmethod
+    def load_backup(data): # data = b"us1:a1,a2,a3|us2..."
+        backup = {}
+        for user in data.split(DELIMITER):
+            if user == "":
+                continue
+            us, authorize_list = user.split(":")[0], user.split(":")[1].split(",")
+            backup[us] = authorize_list
+        return backup
+
+    @staticmethod
+    def build_connected_and_authorized(connected, authorized):
+        return [SECONDARY_DELIMITER.join(connected), SECONDARY_DELIMITER.join(authorized)]
+
+    @staticmethod
+    def build_error_message(msg=""):
+        return [ERROR_STATUS, msg]
+
+    @staticmethod
+    def build_ok_message(msg=""):
+        return [OK_STATUS, msg]
+
+    @staticmethod
+    def is_ok_status(msg):
+        return msg[0] == "ok"
