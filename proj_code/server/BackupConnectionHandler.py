@@ -4,7 +4,7 @@ import time
 from proj_code.common import *
 
 
-SLEEP_TIME = 30
+SLEEP_TIME = 5
 
 class BackupConnectionHandler:
 

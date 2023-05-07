@@ -20,7 +20,7 @@ class ChatServer:
         self.__is_primary = None
         self.__update_chk = False
         self.__is_active = False
-        self.__backup_data = None
+        self.__backup_data = {}
         self.__server_keys = None
         self.__backup_thread = None
 
@@ -82,6 +82,9 @@ class ChatServer:
     def update_authorize(self, connection, to_authorize):
         self.__conn_handler.update_authorize(connection, to_authorize)
 
+    def update_waiting(self, want_to_wait_socket, to_ask_user):
+        self.__conn_handler.update_waiting(want_to_wait_socket, to_ask_user)
+
     def get_public_key(self, connection):
         return self.__conn_handler.get_public_key(connection)
 
@@ -123,6 +126,12 @@ class ChatServer:
     def is_authorized(self, source, target):
         return self.__conn_handler.is_authorized(source, target)
 
+    def is_waiting(self, current_socket, to_wait):
+        return self.__conn_handler.is_waiting(current_socket, to_wait)
+
+    def is_in_waiting(self, current_socket, to_allow):
+        return self.__conn_handler.is_in_waiting(current_socket,to_allow)
+
     def push_message(self, target, msg):
         self.__conn_handler.push_message(target, msg)
 
@@ -133,6 +142,9 @@ class ChatServer:
         except:
             print("unable to connect sendable conn")
             return ChatProtocol.build_error_message("unable to connect, please check and send again")
+
+    def get_waiting_list(self, current_socket):
+        return [WAITING_COMMAND, self.__conn_handler.get_waiting_list(current_socket)]
 
     def sendto_msg(self, conn, send_to, msg):
         if self.is_connected(send_to):
@@ -153,25 +165,28 @@ class ChatServer:
         else:
             return ChatProtocol.build_error_message(f"{send_to} is not currently connected (or exist)")
 
-    def authorize(self, current_socket, to_authorize):
-        if not self.is_connected(to_authorize):
+    def authorize(self, current_socket, ask_to_authorize):
+        if not self.is_connected(ask_to_authorize):
             return ChatProtocol.build_error_message("the user is not currently connected")
-        if not self.is_authorized(current_socket, to_authorize):
-            while True:
-                # ask = input(PENDING_COLOR + "does %s can connect to %s\n'd' = denied\t'o' = ok" % (current_conn_data.get_user(), to_authorize))
-                ask = 'o'
-                if ask in ['d', 'o']:
-                    break
-                else:
-                    print(ERROR_COLOR + "try again ('d'/'o'")
-            if ask == 'd':
-                return ChatProtocol.build_error_message("the server denied")
-            elif ask == 'o':
-                self.update_authorize(current_socket, to_authorize)
-                return ChatProtocol.build_ok_message(f"the server accepted your conn to {to_authorize}")
+        if not self.is_authorized(current_socket, ask_to_authorize):
+            if not self.is_waiting(current_socket, ask_to_authorize):
+                self.update_waiting(current_socket, ask_to_authorize)
+                return ChatProtocol.build_ok_message(f"the server ask {ask_to_authorize} to authorize you")
+            else:
+                return ChatProtocol.build_ok_message(f"you already asked {ask_to_authorize} to authorize you")
         else:
             return ChatProtocol.build_ok_message("user already authorize to send")
 
+    def allow(self, current_socket, to_allow):
+        if not self.is_connected(to_allow):
+            return ChatProtocol.build_error_message(f"{to_allow} is not currently connected")
+
+        if self.is_in_waiting(current_socket, to_allow):
+            self.__conn_handler.allow(current_socket, to_allow)
+            self.__update_chk = True
+            return ChatProtocol.build_ok_message(f"{to_allow} is now allowed to send you message")
+        else:
+            return ChatProtocol.build_error_message(f"{to_allow} didn't ask to get allowed")
     def encrypt(self, current_socket, msg):
         command, data = ChatProtocol.parse_command(msg)
         try:
@@ -210,6 +225,14 @@ class ChatServer:
             print(ERROR_COLOR + f"{self.get_username(current_socket)} ask to close, closing...")
             self.handle_close(current_socket)
 
+        elif command == WAITING_COMMAND:   # see_waiting|
+            waiting_msg = self.get_waiting_list(current_socket)
+            self.send_message(current_socket, waiting_msg)
+
+        elif command == ALLOW_COMMAND:       #allow|to_allow
+            res = self.allow(current_socket, data[0])
+            self.send_message(current_socket, res)
+
         else:
             self.send_message(current_socket, ChatProtocol.build_error_message("illegible command, closing connection"))
             print(ERROR_COLOR + f"{current_socket.getpeername()} is unknown and broke protocol, closing...")
@@ -225,7 +248,7 @@ class ChatServer:
             if response[0]:
                 self.send_message(current_socket, ChatProtocol.build_ok_message(response[1]))
                 self.__conn_handler.add_connected_user(username, current_socket)
-                if not self.__is_primary and username in self.__backup_data.keys():
+                if self.__is_active and username in self.__backup_data.keys():
                     self.set_authorize(current_socket, self.__backup_data[username])
             else:
                 self.send_message(current_socket, ChatProtocol.build_error_message(response[1]))
@@ -264,6 +287,8 @@ class ChatServer:
         except ConnectionResetError:
             self.switch_servers()
             self.__is_active = True
+            self.__is_primary = True
+            self.connect_backup()
             self.start_listening()
 
     def start_listening(self):
@@ -299,6 +324,7 @@ class ChatServer:
                 if self.__update_chk is True:
                     ConnectionUtils.put_free_backup()
                     self.connect_backup()
+
 
 
 def main(ip=DEFAULT_IP, port=0):

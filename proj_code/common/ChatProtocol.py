@@ -11,6 +11,8 @@ ENCRYPT_COMMAND = "start_enc"
 MSG_COMMAND = 'msg'
 BACKUP_COMMAND = 'backup'
 START_ENCRYPT_COMMAND = "start_enc"
+WAITING_COMMAND = "see_waiting"
+ALLOW_COMMAND = 'allow'
 
 OK_STATUS = "ok"
 ERROR_STATUS = "error"
@@ -109,3 +111,18 @@ class ChatProtocol:
     @staticmethod
     def is_ok_status(msg):
         return msg[0] == "ok"
+    @staticmethod
+    def build_see_waiting_server(waiting_list):
+        return f"{SECONDARY_DELIMITER.join(waiting_list)}"
+
+    @staticmethod
+    def parse_see_waiting(data):
+        return data.split(SECONDARY_DELIMITER)
+
+    @staticmethod
+    def build_see_waiting_client():
+        return f"{WAITING_COMMAND}{DELIMITER}"
+
+    @staticmethod
+    def build_allow(to_allow):
+        return f"{ALLOW_COMMAND}{DELIMITER}{to_allow}"

@@ -48,7 +48,7 @@ class ServerConnectionHandler:
     def get_all_connected_users(self):
         return self.__conn_data.keys()
 
-    def __get_conn_data(self, user):
+    def __get_conn_data(self, user) -> ConnectionData:
         return self.__conn_data[user]
 
     def add_conn_data(self, user):
@@ -80,6 +80,12 @@ class ServerConnectionHandler:
             pass
 
         try:
+            self.clean_user_waiting(username)
+
+        except:
+            pass
+
+        try:
             self.__conn_data.pop(connection)
         except KeyError:
             pass
@@ -102,6 +108,11 @@ class ServerConnectionHandler:
 
     def is_authorized(self, source, target):
         return target in self.get_authorize(source)
+
+    def is_waiting(self, current_socket, to_wait):
+        username_of_wait = self.get_username(current_socket)
+        to_wait_conn = self.__connected_users[to_wait]
+        return username_of_wait in self.__get_conn_data(to_wait_conn).get_waiting()
 
     def send_close_message(self, connection):
         self.get_write_socket(connection).sendall(EncryptionUtils.encrypt(ChatProtocol.build_close_connection(),
@@ -126,13 +137,20 @@ class ServerConnectionHandler:
 
     def clean_user_authorizations(self, username):
         authorization_found = False
-        for user in self.get_all_connected_users():
+        for connection in self.get_all_connected_users():
             try:
-                self.get_authorize(user).remove(username)
+                self.get_authorize(connection).remove(username)
                 authorization_found = True
             except ValueError:
                 continue
         return authorization_found
+
+    def clean_user_waiting(self, username):
+        for connection in self.get_all_connected_users():
+            try:
+                self.get_waiting(connection).remove(username)
+            except ValueError:
+                continue
 
     def share_public_keys(self, connection, server_public_key):
         connection.sendall(ChatProtocol.build_ok().encode())
@@ -154,11 +172,19 @@ class ServerConnectionHandler:
     def get_authorize(self, connection):
         return self.__get_conn_data(connection).get_authorize()
 
+    def get_waiting(self, connection):
+        return self.__get_conn_data(connection).get_waiting()
+
     def set_authorize(self, connection, to_authorize):
         self.__get_conn_data(connection).set_authorize(to_authorize)
 
     def update_authorize(self, connection, to_authorize):
         self.__get_conn_data(connection).update_authorize(to_authorize)
+
+    def update_waiting(self, current_socket, to_wait):
+        username_of_wait = self.get_username(current_socket)
+        to_wait_conn = self.__connected_users[to_wait]
+        self.__get_conn_data(to_wait_conn).update_waiting(username_of_wait)
 
     def get_status(self, connection):
         return self.__get_conn_data(connection).get_status()
@@ -204,3 +230,17 @@ class ServerConnectionHandler:
             elif resp is None:
                 print(ERROR_COLOR + "Unable to register, Retry in 5 sec")
                 time.sleep(5)
+
+    def get_waiting_list(self, current_socket):
+        return ChatProtocol.build_see_waiting_server(self.__get_conn_data(current_socket).get_waiting())
+
+    def is_in_waiting(self, current_socket, to_allow):
+        return to_allow in self.__get_conn_data(current_socket).get_waiting()
+
+    def allow(self, current_socket, to_allow):
+        self.__get_conn_data(current_socket).remove_waiting(to_allow)
+        username_to_authorize = self.get_username(current_socket)
+        to_allow_conn = self.__connected_users[to_allow]
+        self.__get_conn_data(to_allow_conn).update_authorize(username_to_authorize)
+
+

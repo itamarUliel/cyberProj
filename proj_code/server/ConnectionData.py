@@ -6,6 +6,19 @@ class ConnectionData:
         self.__public_key = None
         self.__write_socket = None
         self.__write_socket_key = None
+        self.__waiting = []
+
+    def get_waiting(self):
+        return self.__waiting
+
+    def set_pending(self, value):
+        self.__waiting = value
+
+    def update_waiting(self, value):
+        self.__waiting.append(value)
+
+    def remove_waiting(self, value):
+        self.__waiting.remove(value)
 
     def get_status(self):
         return self.__status

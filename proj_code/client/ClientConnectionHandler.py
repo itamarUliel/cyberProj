@@ -17,11 +17,16 @@ class ClientConnectionHandler:
     @staticmethod
     def __connect_chat_server():
         chat_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_address = ConnectionUtils.get_chat_server_address()
         while True:
+            server_address = ConnectionUtils.get_chat_server_address()
             try:
                 chat_server.connect(server_address)
                 break
+
+            except TypeError:
+                print("currently, there is no chat server to connect to, waiting 10 seconds")
+                sleep(10)
+
             except ConnectionError:
                 print("Cannot connect chat server. Waiting 5 seconds")
                 sleep(5)
@@ -40,37 +45,26 @@ class ClientConnectionHandler:
             return EncryptionUtils.decrypt(conn.recv(MSG_SIZE), self.__client_keys["pr"])
         except ConnectionResetError:
             print("the main server is down. closing connection")
-            self.close_connection()
             exit()
 
-    def __reconnect_server(self):
-        self.__chat_server = self.__connect_chat_server()
-
     def __send_message(self, msg, to_enc=True):
-        try:
-            if not to_enc:
-                try:
-                    self.__chat_server.send(msg.encode())
-                except AttributeError:
-                    self.__chat_server.send(msg)
-            else:
-                self.__chat_server.send(EncryptionUtils.encrypt(msg, self.__server_public_key))
-        except ConnectionError:
-            self.__reconnect_server()
+        if not to_enc:
+            try:
+                self.__chat_server.send(msg.encode())
+            except AttributeError:
+                self.__chat_server.send(msg)
+        else:
+            self.__chat_server.send(EncryptionUtils.encrypt(msg, self.__server_public_key))
 
     def __receive_message(self, to_decrypt=True):
-        try:
-            if not to_decrypt:
-                try:
-                    data = self.__chat_server.recv(MSG_SIZE)
-                    return data.decode()
-                except Exception:
-                    return data # YYY
-            else:
-                return EncryptionUtils.decrypt(self.__chat_server.recv(MSG_SIZE), self.__client_keys["pr"])
-
-        except ConnectionError:
-            self.__reconnect_server()
+        if not to_decrypt:
+            try:
+                data = self.__chat_server.recv(MSG_SIZE)
+                return data.decode()
+            except Exception:
+                return data  # YYY
+        else:
+            return EncryptionUtils.decrypt(self.__chat_server.recv(MSG_SIZE), self.__client_keys["pr"])
 
     def __send_wconn(self, ip, port):
         try:
@@ -115,11 +109,20 @@ class ClientConnectionHandler:
             self.__send_message(ChatProtocol.build_authorize(username))
             status, msg = ChatProtocol.parse_response(self.__receive_message())
             if status == OK_STATUS:
+                print(OK_COLOR + msg)
                 logging.info(f"User '{username}' authorized")
             else:
                 logging.warning(f"User '{username}' failed to authorize. {msg}")
         except Exception:
             logging.error("Error during authorize")
+
+    def allow(self, username_to_allow):
+        self.__send_message(ChatProtocol.build_allow(username_to_allow))
+        status, msg = ChatProtocol.parse_response(self.__receive_message())
+        if status == OK_STATUS:
+            print(f"User '{username_to_allow}' allowed to send you message")
+        else:
+            print(f"User '{username_to_allow}' failed to authorize. {msg}")
 
     def get_connected_users(self):
         try:
@@ -144,7 +147,19 @@ class ClientConnectionHandler:
             logging.error("Error during send_message")
             return False
 
+    def close_all_sockets(self):
+        self.__chat_server.close()
+        try:
+            self.__wconn_socket.close()
+        except AttributeError:
+            pass
 
-
-
+    def see_waiting(self):
+        self.__send_message(ChatProtocol.build_see_waiting_client())
+        status, msg = ChatProtocol.parse_response(self.__receive_message())
+        if status == WAITING_COMMAND:
+            return ChatProtocol.parse_see_waiting(msg)
+        else:
+            print("couldn't get waiting...")
+            return None
 

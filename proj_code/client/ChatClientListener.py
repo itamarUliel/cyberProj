@@ -19,5 +19,5 @@ class ChatClientListener:
             else:
                 print("the server send an illegal command to wconn, shutting down the client!")
                 connection_handler.close_connection()
-                exit()
+                break
 
