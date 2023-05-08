@@ -2,7 +2,7 @@ import select
 import socket
 from server_values import *
 initialize()
-from server_handeler import *
+from server_handler import *
 server_keys = None
 
 
@@ -14,7 +14,7 @@ def start_server():
     socket_address = ("127.0.0.1", 7777)
     server.bind(socket_address)
     server.listen()
-    server_keys = Encryption_handeler.get_keys(1500)
+    server_keys = Encryption_handler.get_keys(1500)
     print("START_SERVER: LISTENING AT:", socket_address)
     print("START_SERVER: server got keys!", end="\n\n")
     return server
@@ -58,8 +58,8 @@ def sendmsgs(msg, s=None):
         print("SENDMSGS: sending-", "|".join(msg).encode())
         return "|".join(msg).encode()
     else:
-        print("SENDMSGS: sending-", Encryption_handeler.encrypt("|".join(msg), users_keys[s]), end="\n\n")
-        return Encryption_handeler.encrypt("|".join(msg), users_keys[s])
+        print("SENDMSGS: sending-", Encryption_handler.encrypt("|".join(msg), users_keys[s]), end="\n\n")
+        return Encryption_handler.encrypt("|".join(msg), users_keys[s])
 
 
 def start_listening(server):
@@ -115,7 +115,7 @@ def start_listening(server):
                                         s.sendall(sendmsgs(["ok"]))
                                         key = s.recv(BYTE_SIZE)
                                         start_encrypt(key, s)
-                                        s.sendall(Encryption_handeler.save_public(server_keys["pb"]))
+                                        s.sendall(Encryption_handler.save_public(server_keys["pb"]))
                                         print(f"LISTEN: {connected_users[s]} done ENC!\nhis pb:\t{users_keys[s]}")
 
                                     elif command == "ok":
@@ -131,7 +131,7 @@ def start_listening(server):
                             s.close()
                         else:
                             print(f"ENC_LISTEN: got an ENC msg from {connected_users[s]}")
-                            data = Encryption_handeler.decrypt(data, server_keys["pr"])
+                            data = Encryption_handler.decrypt(data, server_keys["pr"])
                             print("the msg:", data)
                             data = data.split("|")
                             command, c_data = data[0], data[1:]
@@ -151,7 +151,7 @@ def start_listening(server):
                             elif command == "connected":
                                 print("faf")
                                 data = conncted(s)
-                                s.sendall(Encryption_handeler.encrypt(data, users_keys[s]))
+                                s.sendall(Encryption_handler.encrypt(data, users_keys[s]))
                 else:
                     # Interpret empty result as closed connection
                     print(f'closing {client_address}, he died')

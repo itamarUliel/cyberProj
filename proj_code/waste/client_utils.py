@@ -6,7 +6,7 @@ def initialize():
     server_public_key = None
     wconn_keys = None
     wconn_ip = "127.0.0.1"
-    BYTE_SIZE = 4000
+    BYTE_SIZE = 5000
     backup_bind = None
     server_address = ('127.0.0.1', 5555)
     try:
@@ -15,4 +15,5 @@ def initialize():
     except NameError:
         user_backup = None
 
-BYTE_SIZE = 4000
+
+BYTE_SIZE = 5000
