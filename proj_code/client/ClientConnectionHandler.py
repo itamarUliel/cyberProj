@@ -77,7 +77,6 @@ class ClientConnectionHandler:
             return False
 
     def login(self, username, pwd):
-        try:
             self.__send_message(ChatProtocol.build_login(username, pwd))
             status, msg = ChatProtocol.parse_response(self.__receive_message())
             if status == OK_STATUS:
@@ -86,9 +85,6 @@ class ClientConnectionHandler:
             else:
                 logging.warning(f"User '{username}' failed to logged in. {msg}")
                 return False
-        except Exception as e:
-            print("Error during login")
-            return False
 
     def close_connection(self):
         logging.info(f"closing")

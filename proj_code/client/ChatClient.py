@@ -97,12 +97,12 @@ class ChatClient:
 
         while True:
             show = """\n
-                        'a' = ask server to authorize this user
+                        'f' = send a 'friend request' to some to send them message
                         'm' = write a message
                         'e' = close connection (exit)
                         'c' = see who's connected and who you can talk to
                         'w' = see who's waiting to get authorize by you
-                        'A' = allow someone to send you message
+                        'a' = allow someone to send you message
                         """
             print(show)
             try:
@@ -115,10 +115,10 @@ class ChatClient:
                 sys.stdin = open(0, 'r')
                 act = input("\t\t\tact:")[0]
 
-            if act in ['a', 'm', 'e', 'c', 'w', 'A']:
+            if act in ['f', 'm', 'e', 'c', 'w', 'a']:
                 if act == 'e':
                     self.close_connection()
-                elif act == 'a':
+                elif act == 'f':
                     self.authorize()
                 elif act == 'c':
                     self.get_connected_users()
@@ -126,7 +126,7 @@ class ChatClient:
                     self.send_message()
                 elif act == 'w':
                     self.see_waiting()
-                elif act == 'A':
+                elif act == 'a':
                     self.allow()
 
 

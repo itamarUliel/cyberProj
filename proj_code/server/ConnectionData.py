@@ -11,7 +11,7 @@ class ConnectionData:
     def get_waiting(self):
         return self.__waiting
 
-    def set_pending(self, value):
+    def set_waiting(self, value):
         self.__waiting = value
 
     def update_waiting(self, value):

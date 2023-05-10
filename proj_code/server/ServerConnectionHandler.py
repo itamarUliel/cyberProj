@@ -51,6 +51,9 @@ class ServerConnectionHandler:
     def __get_conn_data(self, user) -> ConnectionData:
         return self.__conn_data[user]
 
+    def set_waiting(self, current_socket, to_waiting):
+        self.__conn_data[current_socket].set_waiting(to_waiting)
+
     def add_conn_data(self, user):
         self.__conn_data[user] = ConnectionData()
 
@@ -242,5 +245,3 @@ class ServerConnectionHandler:
         username_to_authorize = self.get_username(current_socket)
         to_allow_conn = self.__connected_users[to_allow]
         self.__get_conn_data(to_allow_conn).update_authorize(username_to_authorize)
-
-

@@ -4,7 +4,7 @@ import time
 from proj_code.common import *
 
 
-SLEEP_TIME = 5
+SLEEP_TIME = 20
 
 class BackupConnectionHandler:
 
@@ -26,17 +26,8 @@ class BackupConnectionHandler:
         self.__has_backup = has_backup
 
     @staticmethod
-    def save_backup(data):
-        backup = ""
-        for s in data.keys():
-            current_conn_data = data[s]
-            user = current_conn_data.get_user()
-            authorize_u = current_conn_data.get_authorize()
-            if user is not None and authorize_u != []:
-                backup += ":".join([user, ",".join(authorize_u)]) + "|"
-        if backup == "":
-            backup = "nothing to share."
-        return backup
+    def save_backup(conn_data):
+        return ChatProtocol.save_backup(conn_data)
 
     @staticmethod
     def connect(backup_handler, connections_data):
@@ -57,10 +48,10 @@ class BackupConnectionHandler:
                 backup_handler.set_backed_up(False)
                 time.sleep(SLEEP_TIME)
 
-    def update(self, connections_update):
+    def update(self, conn_data):
         backup_updated = False
         try:
-            self.__backup_socket.sendall(EncryptionUtils.encrypt(self.save_backup(connections_update), self.__backup_public_key))
+            self.__backup_socket.sendall(EncryptionUtils.encrypt(self.save_backup(conn_data), self.__backup_public_key))
             backup_updated = True
         except ConnectionResetError:
             print(ERROR_COLOR + "couldnt backup")

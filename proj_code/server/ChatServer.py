@@ -20,7 +20,8 @@ class ChatServer:
         self.__is_primary = None
         self.__update_chk = False
         self.__is_active = False
-        self.__backup_data = {}
+        self.__authorize_backup = {}
+        self.__waiting_backup = {}
         self.__server_keys = None
         self.__backup_thread = None
 
@@ -78,6 +79,9 @@ class ChatServer:
 
     def set_authorize(self, connection, to_authorize):
         self.__conn_handler.set_authorize(connection, to_authorize)
+
+    def set_waiting(self, current_socket, to_waiting):
+        self.__conn_handler.set_waiting(current_socket, to_waiting)
 
     def update_authorize(self, connection, to_authorize):
         self.__conn_handler.update_authorize(connection, to_authorize)
@@ -248,8 +252,12 @@ class ChatServer:
             if response[0]:
                 self.send_message(current_socket, ChatProtocol.build_ok_message(response[1]))
                 self.__conn_handler.add_connected_user(username, current_socket)
-                if self.__is_active and username in self.__backup_data.keys():
-                    self.set_authorize(current_socket, self.__backup_data[username])
+
+                if self.__is_active and username in self.__authorize_backup.keys():
+                    self.set_authorize(current_socket, self.__authorize_backup[username])
+
+                if self.__is_active and username in self.__waiting_backup.keys():
+                    self.set_waiting(current_socket, self.__waiting_backup[username])
             else:
                 self.send_message(current_socket, ChatProtocol.build_error_message(response[1]))
 
@@ -280,10 +288,17 @@ class ChatServer:
             data = True
             while data:
                 data = self.__conn_handler.get_backup_update(self.__get_server_private_key())
-                print(DATA_COLOR + f"got backup: {data}")
-                if data == "nothing to share.":
-                    continue
-                self.__backup_data = ChatProtocol.load_backup(data)
+                raw_authorize_backup, raw_waiting_backup = ChatProtocol.parse_backup(data)
+                print(DATA_COLOR + f"""got backup:
+                                   \tauthorize: {raw_authorize_backup}
+                                   \twaiting: {raw_waiting_backup}""")
+
+                if raw_authorize_backup != "no_backup":
+                    self.__authorize_backup = ChatProtocol.new_load_backup(raw_authorize_backup)
+
+                if raw_waiting_backup != "no_backup":
+                    self.__waiting_backup = ChatProtocol.new_load_backup(raw_waiting_backup)
+
         except ConnectionResetError:
             self.switch_servers()
             self.__is_active = True
@@ -324,7 +339,6 @@ class ChatServer:
                 if self.__update_chk is True:
                     ConnectionUtils.put_free_backup()
                     self.connect_backup()
-
 
 
 def main(ip=DEFAULT_IP, port=0):

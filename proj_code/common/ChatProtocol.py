@@ -1,5 +1,6 @@
 DELIMITER = "|"
 SECONDARY_DELIMITER = ","
+BACKUP_DELIMITER = ";"
 
 LOGIN_COMMAND = "login"
 CLOSE_COMMAND = "close"
@@ -18,6 +19,15 @@ OK_STATUS = "ok"
 ERROR_STATUS = "error"
 
 class ChatProtocol:
+
+    @staticmethod
+    def save_backup(conn_data):
+        return f"{ChatProtocol.save_authorize_backup(conn_data)}{BACKUP_DELIMITER}{ChatProtocol.save_waiting_backup(conn_data)}"
+
+    @staticmethod
+    def parse_backup(raw_backup_data):
+        return raw_backup_data.split(BACKUP_DELIMITER)
+
     @staticmethod
     def build_login(username, pwd):
         return f"{LOGIN_COMMAND}{DELIMITER}{username}{DELIMITER}{pwd}"
@@ -126,3 +136,35 @@ class ChatProtocol:
     @staticmethod
     def build_allow(to_allow):
         return f"{ALLOW_COMMAND}{DELIMITER}{to_allow}"
+
+    @staticmethod
+    def save_authorize_backup(conn_data):
+        result = []
+        for current_user in conn_data.keys():
+            username, authorize_list = conn_data[current_user].get_user(), conn_data[current_user].get_authorize()
+            if not authorize_list:
+                continue
+            result.append(f"{username}:{','.join(authorize_list)}")
+        if not result:
+            return "no_backup"
+        return "|".join(result)
+
+    @staticmethod
+    def save_waiting_backup(conn_data):
+        result = []
+        for current_user in conn_data.keys():
+            username, waiting_list = conn_data[current_user].get_user(), conn_data[current_user].get_waiting()
+            if not waiting_list:
+                continue
+            result.append(f"{username}:{','.join(waiting_list)}")
+        if not result:
+            return "no_backup"
+        return "|".join(result)
+
+    @staticmethod
+    def new_load_backup(string:str):
+        result = {}
+        for user in string.split("|"):
+            username, listed = user.split(":")
+            result[username] = listed.split(",")
+        return result
