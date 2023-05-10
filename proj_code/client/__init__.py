@@ -1,5 +1,4 @@
-import sys
-sys.path.append("C:\\Users\\itama\\PycharmProjects\\cyberProj\\proj_code\\client")
-from ChatClientListener import ChatClientListener
-from ClientConnectionHandler import ClientConnectionHandler
-from ChatClient import ChatClient
+from proj_code.client.ClientConnectionHandler import ClientConnectionHandler
+from proj_code.client.ChatClientListener import ChatClientListener
+from proj_code.client.ChatClient import ChatClient
+

@@ -1,13 +1,16 @@
-from proj_code.client import *
+import os
+import sys
 from threading import Thread
+
+from proj_code.client import *
 
 
 class ChatClient:
-
     def __init__(self):
         self.__user_backup = None
         self.__conn_handler = ClientConnectionHandler()
         self.__listener = None
+        self.__stdin_descriptor = os.dup(0)
 
     def start_listener(self):
         self.__listener = Thread(target=ChatClientListener.do_listen, args=[self.__conn_handler]).start()
@@ -15,6 +18,10 @@ class ChatClient:
     def close_connection(self):
         self.__conn_handler.close_connection()
         exit()
+
+    def reopen_stdin(self):
+        sys.stdin = open(self.__stdin_descriptor)
+        self.__stdin_descriptor = os.dup(0)
 
     def authorize(self):
         self.get_connected_users()
@@ -63,8 +70,7 @@ class ChatClient:
                 try:
                     data = input("\t\tenter us then password (split with space) (or write 'exit' to exit)").split()
                 except ValueError:
-                    sys.stdin = open(0, 'r')
-                    data = input("\t\tenter us then password (split with space) (or write 'exit' to exit)").split()
+                    self.reopen_stdin()
                 if data[0] == "exit":
                     self.close_connection()
             else:
@@ -112,7 +118,7 @@ class ChatClient:
                 continue
 
             except ValueError:
-                sys.stdin = open(0, 'r')
+                self.reopen_stdin()
                 act = input("\t\t\tact:")[0]
 
             if act in ['f', 'm', 'e', 'c', 'w', 'a']:
@@ -128,7 +134,6 @@ class ChatClient:
                     self.see_waiting()
                 elif act == 'a':
                     self.allow()
-
 
 def start_client():
     chat_client = ChatClient()

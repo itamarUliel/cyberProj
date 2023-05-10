@@ -1,5 +1,6 @@
 import socket
 import logging
+from rsa.pkcs1 import DecryptionError
 from time import sleep
 
 from proj_code.common import *
@@ -43,7 +44,7 @@ class ClientConnectionHandler:
     def do_listen(self, conn):
         try:
             return EncryptionUtils.decrypt(conn.recv(MSG_SIZE), self.__client_keys["pr"])
-        except ConnectionResetError:
+        except (ConnectionResetError, DecryptionError):
             print("the main server is down. closing connection")
             exit()
 
