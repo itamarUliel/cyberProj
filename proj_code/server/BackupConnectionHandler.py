@@ -6,8 +6,8 @@ from proj_code.common import *
 
 SLEEP_TIME = 20
 
-class BackupConnectionHandler:
 
+class BackupConnectionHandler:
     def __init__(self):
         self.__backup_public_key = None
         self.__backup_socket: socket.socket = None
@@ -43,8 +43,16 @@ class BackupConnectionHandler:
                 print(OK_COLOR + "backup is connected!")
                 backup_handler.set_backed_up(True)
                 break
-            except (ConnectionRefusedError, HasNoBackupException):
+
+            except HasNoBackupException:
+                print(ERROR_COLOR + f"there is no backup, running without it, trying again in {SLEEP_TIME} seconds")
+                backup_handler.set_backed_up(False)
+                time.sleep(SLEEP_TIME)
+
+            except ConnectionRefusedError:
                 print(ERROR_COLOR + f"couldn't connect backup, running without it, trying again in {SLEEP_TIME} seconds")
+                print(DATA_COLOR + "sending the connection server to free backup")
+                ConnectionUtils.put_free_backup()
                 backup_handler.set_backed_up(False)
                 time.sleep(SLEEP_TIME)
 
@@ -54,6 +62,6 @@ class BackupConnectionHandler:
             self.__backup_socket.sendall(EncryptionUtils.encrypt(self.save_backup(conn_data), self.__backup_public_key))
             backup_updated = True
         except ConnectionResetError:
-            print(ERROR_COLOR + "couldnt backup")
+            print(ERROR_COLOR + "couldn't backup")
             backup_updated = False
         return backup_updated

@@ -1,4 +1,4 @@
-import os
+from os import dup
 import sys
 from threading import Thread
 
@@ -21,7 +21,7 @@ class ChatClient:
 
     def reopen_stdin(self):
         sys.stdin = open(self.__stdin_descriptor)
-        self.__stdin_descriptor = os.dup(0)
+        self.__stdin_descriptor = dup(0)
 
     def authorize(self):
         self.get_connected_users()
