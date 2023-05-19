@@ -15,7 +15,7 @@ primary_server = None
 backup_server = None
 
 
-def resting():
+def resetting():
     global primary_server, backup_server
     while True:
         event = keyboard.read_event()
@@ -60,6 +60,7 @@ def put_new_server():
     global primary_server, backup_server
     try:
         server_address = request.data.decode().split(":")
+        print("fefef", request.remote_addr)
         if primary_server is None:
             primary_server = (server_address[0], int(server_address[1]))
             resp = make_response("primary", 200)
@@ -124,5 +125,5 @@ def switch_servers():
 
 if __name__ == '__main__':
     print(PENDING_COLOR + "to reset connection servers registered server press 'esc'", ERROR_COLOR + "DO NOT USE WHILE COMMUNICATING")
-    threading.Thread(target=resting).start()
+    threading.Thread(target=resetting).start()
     app.run()

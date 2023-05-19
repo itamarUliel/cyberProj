@@ -37,13 +37,3 @@ class UserHandler:
             self.__connected_users.remove(user)
         except ValueError:
             pass
-
-"""
-    if not self.get_is_primary():
-        backup = self.get_backup_data()
-        if data[0] in backup.keys():
-            current_conn_data.set_authorize(backup[data[0]])
-            print(DATA_COLOR + f"{data[0]} has aa backup, backup load: {backup[data[0]]}")
-        else:
-            print(DATA_COLOR + f"{data[0]} didn't have backup to load")
-"""

@@ -1,5 +1,5 @@
 import colorama
-from colorama import Back, Fore
+from colorama import Fore
 colorama.init(autoreset=True)
 
 ERROR_COLOR = Fore.RED
