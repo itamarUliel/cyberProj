@@ -81,7 +81,7 @@ class ConnectionUtils:
             try:
                 ip, port = address
                 response = requests.put(f"http://{CONNECTION_SERVER_IP}:{CONNECTION_SERVER_PORT}/new_server"
-                                        ,data=f"{ip}:{port}")
+                                        , data=f"{ip}:{port}")
                 if response.status_code == 200:
                     print(OK_COLOR + f"registered as {response.content.decode().upper()}")
                     return response.content.decode()
@@ -115,6 +115,7 @@ class ConnectionUtils:
                 print(response.content.decode())
         except Exception:
             print("unable to switch")
+
 
 def test():
     print(DATA_COLOR + "utils demo", PENDING_COLOR + "work only on unused conn server.")
@@ -161,8 +162,11 @@ def test():
         print(ConnectionUtils.get_backup_server_address())
     else:
         raise Exception
+
+
 def main():
     test()
+
 
 if __name__ == '__main__':
     main()

@@ -10,7 +10,7 @@ class ChatClient:
         self.__user_backup = None
         self.__conn_handler = ClientConnectionHandler()
         self.__listener = None
-        self.__stdin_descriptor = os.dup(0)
+        self.__stdin_descriptor = dup(0)
 
     def start_listener(self):
         self.__listener = Thread(target=ChatClientListener.do_listen, args=[self.__conn_handler]).start()

@@ -18,6 +18,7 @@ ALLOW_COMMAND = 'allow'
 OK_STATUS = "ok"
 ERROR_STATUS = "error"
 
+
 class ChatProtocol:
 
     @staticmethod

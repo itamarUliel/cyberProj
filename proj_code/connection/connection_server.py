@@ -12,7 +12,10 @@ SECONDARY_PORT = 7890
 DEFAULT_PRIMARY = f"{PRIMARY_IP}:{PRIMARY_PORT}"
 
 primary_server = None
+primary_registered_ip = None
+
 backup_server = None
+backup_registered_ip = None
 
 
 def resetting():
@@ -57,16 +60,17 @@ def get_secondary():
 
 @app.route("/new_server", methods=['PUT'])
 def put_new_server():
-    global primary_server, backup_server
+    global primary_server, backup_server, primary_registered_ip, backup_registered_ip
     try:
         server_address = request.data.decode().split(":")
-        print("fefef", request.remote_addr)
         if primary_server is None:
             primary_server = (server_address[0], int(server_address[1]))
+            primary_registered_ip = request.remote_addr
             resp = make_response("primary", 200)
             print(f"Added {server_address} as primary")
         elif backup_server is None:
             backup_server = (server_address[0], int(server_address[1]))
+            backup_registered_ip = request.remote_addr
             print(f"Added {server_address} as backup")
             resp = make_response("backup", 200)
         else:
@@ -102,8 +106,12 @@ def put_backup():
 
 @app.route("/free_backup", methods=['PUT'])
 def put_free_backup():
-    global backup_server
+    global backup_server, primary_registered_ip
     try:
+        if primary_registered_ip != request.remote_addr:
+            resp = make_response("unauthorized Bad Bad boy", 401)
+            return resp
+
         backup_server = None
         resp = make_response("Backup is free", 200)
     except Exception:
@@ -114,16 +122,25 @@ def put_free_backup():
 @app.route("/switch_servers", methods=['PUT'])
 def switch_servers():
     try:
-        global primary_server, backup_server
+        global primary_server, backup_server, backup_registered_ip
+        if backup_registered_ip != request.remote_addr:
+            resp = make_response("unauthorized Bad Bad boy", 401)
+            return resp
+
         primary_server = backup_server
         put_free_backup()
         resp = make_response("server switched", 200)
+
     except Exception:
         resp = make_response(f"unable to switch", 501)
     return resp
 
 
-if __name__ == '__main__':
+def main():
     print(PENDING_COLOR + "to reset connection servers registered server press 'esc'", ERROR_COLOR + "DO NOT USE WHILE COMMUNICATING")
     threading.Thread(target=resetting).start()
     app.run()
+
+
+if __name__ == '__main__':
+    main()
