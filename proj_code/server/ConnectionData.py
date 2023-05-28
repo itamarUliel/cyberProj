@@ -5,7 +5,6 @@ class ConnectionData:
         self.__authorize = []
         self.__public_key = None
         self.__write_socket = None
-        self.__write_socket_key = None
         self.__waiting = []
 
     def get_waiting(self):

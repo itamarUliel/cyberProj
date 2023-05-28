@@ -46,36 +46,6 @@ class ConnectionUtils:
                 time.sleep(5)
 
     @staticmethod
-    def put_primary_server(ip, port):
-        while True:
-            try:
-                response = requests.put(f"http://{CONNECTION_SERVER_IP}:{CONNECTION_SERVER_PORT}/primary"
-                                        , data= f"{ip}:{port}")
-                if response.status_code == 200:
-                    return True
-                else:
-                    print(f"Got error {response.status_code} from connection server: {response.content.decode()}")
-                    time.sleep(5)
-            except Exception:
-                print("Error connecting connection server, Retry in 5 sec")
-                time.sleep(5)
-
-    @staticmethod
-    def put_backup_server(ip, port):
-        while True:
-            try:
-                response = requests.put(f"http://{CONNECTION_SERVER_IP}:{CONNECTION_SERVER_PORT}/backup"
-                                        , data=f"{ip}:{port}")
-                if response.status_code == 200:
-                    return True
-                else:
-                    print(f"Got error {response.status_code} from connection server: {response.content.decode()}")
-                    time.sleep(5)
-            except Exception:
-                print("Error connecting connection server, Retry in 5 sec")
-                time.sleep(5)
-
-    @staticmethod
     def put_new_server(address):
         while True:
             try:

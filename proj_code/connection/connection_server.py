@@ -47,8 +47,11 @@ def get_primary():
 
 @app.route("/backup", methods=['GET'])
 def get_secondary():
-    global backup_server
+    global backup_server, primary_registered_ip
     try:
+        if request.remote_addr != primary_registered_ip:
+            resp = make_response("Unauthorized to get backup address", 401)
+            return resp
         if backup_server is None:
             resp = make_response("Backup server not available", 400)
         else:
@@ -77,30 +80,6 @@ def put_new_server():
             resp = make_response("Your service is not currently needed please try again later", 409)
     except Exception:
         resp = make_response(f"unable to register", 500)
-    return resp
-
-
-@app.route("/primary", methods=['PUT'])
-def put_primary():
-    try:
-        global primary_server
-        server_address = request.data.decode().split(":")
-        primary_server = f"{server_address[0]}:{server_address[1]}"
-        resp = make_response(f"Primary updated {primary_server}", 200)
-    except Exception:
-        resp = make_response(f"Invalid server details", 400)
-    return resp
-
-
-@app.route("/backup", methods=['PUT'])
-def put_backup():
-    try:
-        global backup_server
-        server_address = request.data.decode().split(":")
-        backup_server = f"{server_address[0]}:{server_address[1]}"
-        resp = make_response(f"Backup updated {backup_server}", 200)
-    except Exception:
-        resp = make_response(f"Invalid server details", 400)
     return resp
 
 
