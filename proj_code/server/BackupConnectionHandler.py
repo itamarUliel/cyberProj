@@ -63,5 +63,4 @@ class BackupConnectionHandler:
             backup_updated = True
         except ConnectionResetError:
             print(ERROR_COLOR + "couldn't backup")
-            backup_updated = False
         return backup_updated

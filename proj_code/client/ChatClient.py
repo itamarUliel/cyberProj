@@ -36,7 +36,6 @@ class ChatClient:
     def send_message(self):
         self.get_connected_users()
         target_user = input("who do you want to send:")
-        msg = None
         print(f"enter send mode, user: {target_user}\nto exit enter 'exit_sending'")
         while True:
             msg = input("...:")
@@ -135,6 +134,7 @@ class ChatClient:
                 elif act == 'a':
                     self.allow()
 
+
 def start_client():
     chat_client = ChatClient()
     while True:
@@ -143,6 +143,7 @@ def start_client():
         except ConnectionError:
             chat_client.restart_conn_handler()
             continue
+
 
 def main():
     start_client()

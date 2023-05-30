@@ -19,12 +19,13 @@ backup_registered_ip = None
 
 
 def resetting():
-    global primary_server, backup_server
+    global primary_server, backup_server, primary_registered_ip, backup_registered_ip
     while True:
         event = keyboard.read_event()
         if event.name == 'esc' and event.event_type == 'down':
             print(DATA_COLOR + "servers reset! (will not work for old servers)")
             primary_server, backup_server = None, None
+            primary_registered_ip, backup_registered_ip = None, None
 
 
 @app.route("/chat_server", methods=['GET'])
@@ -85,13 +86,14 @@ def put_new_server():
 
 @app.route("/free_backup", methods=['PUT'])
 def put_free_backup():
-    global backup_server, primary_registered_ip
+    global backup_server, primary_registered_ip, backup_registered_ip
     try:
         if primary_registered_ip != request.remote_addr:
             resp = make_response("unauthorized Bad Bad boy", 401)
             return resp
 
         backup_server = None
+        backup_registered_ip = None
         resp = make_response("Backup is free", 200)
     except Exception:
         resp = make_response(f"unable to register", 501)
@@ -101,12 +103,14 @@ def put_free_backup():
 @app.route("/switch_servers", methods=['PUT'])
 def switch_servers():
     try:
-        global primary_server, backup_server, backup_registered_ip
+        global primary_server, backup_server, backup_registered_ip, primary_registered_ip
         if backup_registered_ip != request.remote_addr:
             resp = make_response("unauthorized Bad Bad boy", 401)
             return resp
 
         primary_server = backup_server
+        primary_registered_ip = backup_registered_ip
+
         put_free_backup()
         resp = make_response("server switched", 200)
 

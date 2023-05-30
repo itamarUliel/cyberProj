@@ -134,7 +134,7 @@ class ChatServer:
         return self.__conn_handler.is_waiting(current_socket, to_wait)
 
     def is_in_waiting(self, current_socket, to_allow):
-        return self.__conn_handler.is_in_waiting(current_socket,to_allow)
+        return self.__conn_handler.is_in_waiting(current_socket, to_allow)
 
     def push_message(self, target, msg):
         self.__conn_handler.push_message(target, msg)
@@ -155,9 +155,8 @@ class ChatServer:
             print(DATA_COLOR + f"{self.get_username(conn)} wants to send {send_to} this: {msg}")
             if self.is_authorized(conn, send_to):
                 try:
-                    self.push_message(send_to, ChatProtocol.build_push_msg(self.get_username(conn), msg)) # msg|sender|{msg}
-                except Exception as e:
-                    print(e)
+                    self.push_message(send_to, ChatProtocol.build_push_msg(self.get_username(conn), msg))  # msg|sender|{msg}
+                except Exception:
                     print(ERROR_COLOR + "error happened while sending, msg didn't send!")
                     return ChatProtocol.build_error_message("problem accrue while sending the msg")
                 else:
@@ -191,6 +190,7 @@ class ChatServer:
             return ChatProtocol.build_ok_message(f"{to_allow} is now allowed to send you message")
         else:
             return ChatProtocol.build_error_message(f"{to_allow} didn't ask to get allowed")
+
     def encrypt(self, current_socket, msg):
         command, data = ChatProtocol.parse_command(msg)
         try:
@@ -198,8 +198,9 @@ class ChatServer:
                 self.__conn_handler.share_public_keys(current_socket, self.__get_server_public_key())
                 self.set_status(current_socket, PENDING_CONNECTION_STATUS)
             else:
-                raise Exception
-
+                self.send_message(current_socket, ChatProtocol.build_error_message("illegible command, closing connection"))
+                print(ERROR_COLOR + f"{current_socket.getpeername()} is unknown and broke protocol, closing...")
+                self.handle_close(current_socket)
         except:
             print(ERROR_COLOR + f"{current_socket.getpeername()} failed to enc, error while replacing keys")
             self.send_message(current_socket, ChatProtocol.build_error_message("error while replacing keys"))
@@ -233,7 +234,7 @@ class ChatServer:
             waiting_msg = self.get_waiting_list(current_socket)
             self.send_message(current_socket, waiting_msg)
 
-        elif command == ALLOW_COMMAND:       #allow|to_allow
+        elif command == ALLOW_COMMAND:       # allow|to_allow
             res = self.allow(current_socket, data[0])
             self.send_message(current_socket, res)
 

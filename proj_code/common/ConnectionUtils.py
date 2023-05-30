@@ -5,10 +5,10 @@ from proj_code.connection import *
 from proj_code.common.colors import *
 
 
-
 class ConnectionUtils:
     PRIMARY_RESPONSE = "primary"
     BACKUP_RESPONSE = "backup"
+
     @staticmethod
     def get_chat_server_address():
         while True:
@@ -43,7 +43,8 @@ class ConnectionUtils:
                 return None
             except Exception:
                 print("Error connecting connection server, Retry in 5 sec")
-                time.sleep(5)
+#                time.sleep(5)
+                return None
 
     @staticmethod
     def put_new_server(address):
@@ -77,34 +78,39 @@ class ConnectionUtils:
 
     @staticmethod
     def put_switch_servers():
-        try:
-            response = requests.put(f"http://{CONNECTION_SERVER_IP}:{CONNECTION_SERVER_PORT}/switch_servers")
-            if response.status_code == 200:
-                print(response.content.decode())
-            elif response.status_code == 501:
-                print(response.content.decode())
-        except Exception:
-            print("unable to switch")
+        while True:
+            try:
+                response = requests.put(f"http://{CONNECTION_SERVER_IP}:{CONNECTION_SERVER_PORT}/switch_servers")
+                if response.status_code == 200:
+                    print(response.content.decode())
+                    return True
+                elif response.status_code == 501:
+                    print(response.content.decode())
+                    time.sleep(5)
+
+            except Exception:
+                print("unable to switch, trying again in 5 seconds")
+                time.sleep(5)
 
 
 def test():
     print(DATA_COLOR + "utils demo", PENDING_COLOR + "work only on unused conn server.")
     print(OK_COLOR + "new server putting:")
-    resp = ConnectionUtils.put_new_server("127.0.0.1", 4545)
+    resp = ConnectionUtils.put_new_server(("127.0.0.1", 4545))
     print(resp)
     if resp == "primary":
         print(ConnectionUtils.get_chat_server_address())
     else:
         raise Exception
 
-    resp = ConnectionUtils.put_new_server("127.0.0.1", 4444)
+    resp = ConnectionUtils.put_new_server(("127.0.0.1", 4444))
     print(resp)
     if resp == "backup":
         print(ConnectionUtils.get_backup_server_address())
     else:
         raise Exception
 
-    resp = ConnectionUtils.put_new_server("127.0.0.1", 7777)
+    resp = ConnectionUtils.put_new_server(("127.0.0.1", 7777))
     print(resp, "\n")
 
     print(OK_COLOR + "backup freeing:")
@@ -112,7 +118,7 @@ def test():
     print(ConnectionUtils.get_backup_server_address(), "\n")
 
     print(OK_COLOR + "resseting backup for switch demo:")
-    resp = ConnectionUtils.put_new_server("127.0.0.1", 76767)
+    resp = ConnectionUtils.put_new_server(("127.0.0.1", 76767))
     print(resp)
     if resp == "backup":
         print(ConnectionUtils.get_backup_server_address(), "\n")
@@ -126,7 +132,7 @@ def test():
     print(ConnectionUtils.get_chat_server_address())
     print(ConnectionUtils.get_backup_server_address())
     print(OK_COLOR + "adding backup")
-    resp = ConnectionUtils.put_new_server("127.0.0.1", 9999)
+    resp = ConnectionUtils.put_new_server(("127.0.0.1", 9999))
     print(resp)
     if resp == "backup":
         print(ConnectionUtils.get_backup_server_address())

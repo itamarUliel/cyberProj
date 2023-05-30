@@ -8,7 +8,7 @@ import time
 class ServerConnectionHandler:
     def __init__(self, address):
         self.__address = address
-        self.__prime = None          # prime server socket if self is backup server
+        self.__prime = None  # prime server socket if self is backup server
         self.__prime_address = None  # prime server address if self is backup server
         self.__server_socket = None
         self.__conn_data = {}
@@ -23,7 +23,8 @@ class ServerConnectionHandler:
         print(DATA_COLOR + "START_SERVER: LISTENING AT:", self.__address)
 
     def open_as_backup(self, server_public_key):
-        self.__prime = self.__server_socket.accept()[0]  # take only the socket of prime (and 'throw' the socket address)
+        self.__prime = self.__server_socket.accept()[
+            0]  # take only the socket of prime (and 'throw' the socket address)
         self.__prime.sendall(EncryptionUtils.save_public(server_public_key))
 
     def get_backup_update(self, server_private_key):
@@ -83,7 +84,7 @@ class ServerConnectionHandler:
             pass
 
         try:
-            self.clean_user_waiting(username)
+            should_update_backup = should_update_backup or self.clean_user_waiting(username)
 
         except:
             pass
@@ -119,15 +120,16 @@ class ServerConnectionHandler:
 
     def send_close_message(self, connection):
         self.get_write_socket(connection).sendall(EncryptionUtils.encrypt(ChatProtocol.build_close_connection(),
-                                                                             self.get_public_key(connection)))
+                                                                          self.get_public_key(connection)))
         self.get_write_socket(connection).close()
 
     def connect_wconn(self, source, target_ip, target_port):
         wconn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         wconn.connect((target_ip, int(target_port)))
         self.set_write_socket(source, wconn)
-        wconn.sendall(EncryptionUtils.encrypt(ChatProtocol.build_ok("the server connected 2 U, you can start recv msg!"),
-                                                 self.get_public_key(source)))
+        wconn.sendall(
+            EncryptionUtils.encrypt(ChatProtocol.build_ok("the server connected 2 U, you can start recv msg!"),
+                                    self.get_public_key(source)))
 
     def push_message(self, target, msg):
         target_user_connection = self.get_connected_user(target)
@@ -135,7 +137,8 @@ class ServerConnectionHandler:
         send_msg = EncryptionUtils.encrypt(msg, self.get_public_key(target_user_connection))
         wconn.sendall(send_msg)
 
-    def receive_message(self, connection: socket.socket):
+    @staticmethod
+    def receive_message(connection: socket.socket):
         return connection.recv(RECEIVE_SIZE)
 
     def clean_user_authorizations(self, username):
@@ -149,11 +152,14 @@ class ServerConnectionHandler:
         return authorization_found
 
     def clean_user_waiting(self, username):
+        waiting_found = False
         for connection in self.get_all_connected_users():
             try:
                 self.get_waiting(connection).remove(username)
+                waiting_found = True
             except ValueError:
                 continue
+        return waiting_found
 
     def share_public_keys(self, connection, server_public_key):
         connection.sendall(ChatProtocol.build_ok().encode())

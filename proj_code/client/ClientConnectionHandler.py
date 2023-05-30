@@ -1,5 +1,5 @@
 import socket
-import logging
+import rsa.pkcs1
 from rsa.pkcs1 import DecryptionError
 from time import sleep
 
@@ -65,7 +65,11 @@ class ClientConnectionHandler:
             except Exception:
                 return data  # YYY
         else:
-            return EncryptionUtils.decrypt(self.__chat_server.recv(MSG_SIZE), self.__client_keys["pr"])
+            try:
+                data = self.__chat_server.recv(MSG_SIZE)
+                return EncryptionUtils.decrypt(data, self.__client_keys["pr"])
+            except rsa.pkcs1.DecryptionError:
+                return data.decode()
 
     def __send_wconn(self, ip, port):
         try:
@@ -74,8 +78,7 @@ class ClientConnectionHandler:
             if status == OK_STATUS:
                 pass
         except Exception:
-            print("Error during login")
-            return False
+            pass
 
     def login(self, username, pwd):
             self.__send_message(ChatProtocol.build_login(username, pwd))
@@ -84,34 +87,35 @@ class ClientConnectionHandler:
                 print(f"User '{username}' logged in successfully")
                 return True
             else:
-                logging.warning(f"User '{username}' failed to logged in. {msg}")
+                print(f"User '{username}' failed to logged in. {msg}")
                 return False
 
     def close_connection(self):
-        logging.info(f"closing")
+        print(f"closing")
         self.__send_message(ChatProtocol.build_close_connection())
+        self.close_all_sockets()
 
     def start_encrypt(self):
         self.__send_message(ChatProtocol.build_start_encrypt(), False)
         status, msg = ChatProtocol.parse_start_encrypt(self.__receive_message(False))
         if status != OK_STATUS:
-            logging.error(f"error while replacing keys. msg: {msg}")
+            print(f"error while replacing keys. msg: {msg}")
             raise Exception
         self.__send_message(EncryptionUtils.save_public(self.__client_keys["pb"]), False)
         self.__server_public_key = EncryptionUtils.load_public(self.__receive_message(False))
 
     def authorize(self, username):
         try:
-            logging.info(f"authorizing {username}")
+            print(f"authorizing {username}")
             self.__send_message(ChatProtocol.build_authorize(username))
             status, msg = ChatProtocol.parse_response(self.__receive_message())
             if status == OK_STATUS:
                 print(OK_COLOR + msg)
-                logging.info(f"User '{username}' authorized")
+                print(f"User '{username}'asked to authorized")
             else:
-                logging.warning(f"User '{username}' failed to authorize. {msg}")
+                print(f"User '{username}' failed to authorize. {msg}")
         except Exception:
-            logging.error("Error during authorize")
+            print("Error during authorize")
 
     def allow(self, username_to_allow):
         self.__send_message(ChatProtocol.build_allow(username_to_allow))
@@ -127,7 +131,7 @@ class ClientConnectionHandler:
             connected, authorized = ChatProtocol.parse_response(self.__receive_message())
             return connected, authorized
         except Exception:
-            logging.error("Error during get connected users")
+            print("Error during get connected users")
             return None, None
 
     def send_message(self, target_user, msg):
@@ -135,13 +139,13 @@ class ClientConnectionHandler:
             self.__send_message(ChatProtocol.build_send_message(target_user, msg))
             status, msg = ChatProtocol.parse_response(self.__receive_message())
             if status == OK_STATUS:
-                logging.info(f"message send")
+                print(f"message send")
                 return True
             else:
-                logging.warning(f"couldn't send message: {msg}")
+                print(f"couldn't send message: {msg}")
                 return False
         except Exception:
-            logging.error("Error during send_message")
+            print("Error during send_message")
             return False
 
     def close_all_sockets(self):

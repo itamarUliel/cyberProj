@@ -1,7 +1,12 @@
 import bcrypt
 from proj_code.common.colors import *
 
+
 class UserHandler:
+    def __init__(self):
+        self.__known_users = self.set_known_users()
+        self.__connected_users = []
+
     @staticmethod
     def set_known_users():
         known_users = {}
@@ -11,10 +16,6 @@ class UserHandler:
             known_users[us] = ps.replace("\n", "")
         f.close()
         return known_users
-
-    def __init__(self):
-        self.__known_users = self.set_known_users()
-        self.__connected_users = []
 
     def login(self, username, pwd):
         try:
