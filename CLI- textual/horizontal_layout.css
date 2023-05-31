@@ -1,17 +1,29 @@
 Screen {
     layout: horizontal;
+    align: center middle;
+
 }
 
 MainComm {
 height: 98%;
-width: 58%;
+width: 49%;
 border: darkturquoise;
 border_title_align: center;
 }
 
+#text_log_1{
+dock: top;
+height: 80%;
+}
+
+#msg{
+height: 10%;
+dock: bottom;
+}
+
 ChatBox {
 height: 98%;
-width: 40%;
+width: 49%;
 border: red heavy;
 border_title_align: center;
 }
@@ -25,8 +37,11 @@ Header {
 
 Connection_box {
     dock: bottom;
-    height: 4%;
+    height: 25%;
     width: 99%;
     border: greenyellow heavy;
     border_title_align: center;
 }
+
+
+

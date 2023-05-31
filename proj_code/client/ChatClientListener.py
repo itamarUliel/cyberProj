@@ -1,6 +1,7 @@
 from proj_code.common import *
 from proj_code.client import *
 
+
 class ChatClientListener:
 
     @staticmethod

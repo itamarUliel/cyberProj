@@ -7,7 +7,7 @@ def initialize():
 
     conn_data = {}
     known_users = {}  # {user: password,...}
-    f = open("../server/users.txt", 'r')
+    f = open("../../proj_code/server/users.txt", 'r')
     for line in f:
         us, ps = line.split("|")
         known_users[us] = ps.replace("\n", "")

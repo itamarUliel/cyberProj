@@ -1,29 +1,58 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Static, Button, Header, Label, Footer, TextLog, Input
+from textual.widgets import Static, Button, Header, Label, Footer, TextLog, Input, DataTable
+from textual.widgets import TextLog
 from textual.widget import Widget
 from textual import events
 from textual.containers import Container, Horizontal, Vertical
 import time
 from textual.reactive import reactive
-from proj_code.client import *
+from rich.text import Text
 
+ROWS = [
+    ("lane", "swimmer", "country", "time"),
+    (4, "Joseph Schooling", "Singapore", 50.39),
+    (2, "Michael Phelps", "United States", 51.14),
+    (5, "Chad le Clos", "South Africa", 51.14),
+    (6, "László Cseh", "Hungary", 51.14),
+    (3, "Li Zhuhao", "China", 51.26),
+    (8, "Mehdy Metella", "France", 51.58),
+    (7, "Tom Shields", "United States", 51.73),
+    (1, "Aleksandr Sadovnikov", "Russia", 51.84),
+    (10, "Darren Burns", "Scotland", 51.84),
+]
 
 
 class MainComm(Widget):
     def compose(self) -> ComposeResult:
-        self.username = Input(placeholder="Username",id="username")
-        self.pwd = Input(placeholder="pwd", password=True, id="pwd")
-        yield self.username
-        yield self.pwd
+        yield TextLog(id="text_log_1")
+        yield Input(placeholder="messege", id="msg")
+
 
 class ChatBox(Widget):
-    pass
+    def compose(self) -> ComposeResult:
+        logger = TextLog()
+        yield logger
+
+
+class ConnectedUsers(DataTable):
+    def on_mount(self) -> None:
+        self.add_columns(*ROWS[0])
+        for row in ROWS[1:]:
+            # Adding styled and justified `Text` objects instead of plain strings.
+            styled_row = [
+                Text(str(cell), style="italic #03AC13", justify="right") for cell in row
+            ]
+            self.add_row(*styled_row)
 
 class Connection_box(Widget):
-    pass
+    def compose(self) -> ComposeResult:
+        yield ConnectedUsers()
+#        yield DataTable(id="athorize")
+#        yield DataTable(id="waitnig")
 
 
-class HorizontalLayoutExample(App):
+
+class HorizontalLayout(App):
     CSS_PATH = "horizontal_layout.css"
     TITLE = "SafeChat CLI by Itamar Uliel"
     SUB_TITLE = "***insert time***"
@@ -60,13 +89,14 @@ class HorizontalLayoutExample(App):
 
     def on_input_submitted(self, input):
         if input.input.id == "pwd":
-            self.pwd = input.value
+            self.mc.pwd = input.value
 
         elif input.input.id == "username":
-            self.username = input.value
+            self.mc.username = input.value
 
-        if self.username is not None and self.pwd is not None:
+        if self.mc.username is not None and self.mc.pwd is not None:
             self.login_ready = True
+            self.validate_ready(True)
 
         print(input.value)
         print(input.input)
@@ -77,11 +107,8 @@ class HorizontalLayoutExample(App):
         return is_ready
 
 
-
-
-
 if __name__ == "__main__":
-    app = HorizontalLayoutExample()
+    app = HorizontalLayout()
     app.run()
 
 """

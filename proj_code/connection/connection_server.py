@@ -38,11 +38,11 @@ def get_primary():
     global primary_server
     try:
         if primary_server is None:
-            resp = make_response("Primary server not available", 400)
+            resp = make_response("Primary server not available", 503)
         else:
             resp = make_response(f"{primary_server[0]}:{primary_server[1]}", 200)
     except Exception:
-        resp = make_response("Primary server not available", 400)
+        resp = make_response("Primary server not available", 500)
     return resp
 
 
@@ -54,11 +54,11 @@ def get_secondary():
             resp = make_response("Unauthorized to get backup address", 401)
             return resp
         if backup_server is None:
-            resp = make_response("Backup server not available", 400)
+            resp = make_response("Backup server not available", 503)
         else:
             resp = make_response(f"{backup_server[0]}:{backup_server[1]}", 200)
     except Exception:
-        resp = make_response("Backup server not available", 400)
+        resp = make_response("Backup server not available", 500)
     return resp
 
 
@@ -96,7 +96,7 @@ def put_free_backup():
         backup_registered_ip = None
         resp = make_response("Backup is free", 200)
     except Exception:
-        resp = make_response(f"unable to register", 501)
+        resp = make_response(f"unable to register", 500)
     return resp
 
 
@@ -115,7 +115,7 @@ def switch_servers():
         resp = make_response("server switched", 200)
 
     except Exception:
-        resp = make_response(f"unable to switch", 501)
+        resp = make_response(f"unable to switch", 500)
     return resp
 
 

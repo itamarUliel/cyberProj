@@ -1,14 +1,14 @@
 import socket
 import threading
 import Encryption_handler
-from proj_code.waste import client_handler
+from client_oop.waste import client_handler
 import sys
 
 from colors import *
 
-from proj_code.waste.client_utils import initialize
+from client_oop.waste.client_utils import initialize
 initialize()
-from proj_code.waste.client_utils import *
+from client_oop.waste.client_utils import *
 
 
 def handle_close(*socks):
