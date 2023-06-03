@@ -10,6 +10,7 @@ import sys, time
 original_stdout = sys.stdout
 import threading
 from os import dup
+from proj_code.common.colors import LOGO
 
 class LoginScreen(Screen):
     def __init__(self, chat_client):
@@ -31,6 +32,7 @@ class LoginScreen(Screen):
     def _on_mount(self, event: events.Mount) -> None:
         self.textLogger = self.login_screen.get_logger()
         sys.stdout = self.textLogger
+        print(LOGO)
         self.chat_client.activate()
         self.chat_client.start_encrypt()
 
@@ -44,6 +46,7 @@ class LoginScreen(Screen):
     def on_input_submitted(self, input):
         if input.input.id == "passwordLogin":
             self.__pwd = input.value
+            input.input.value = ""
 
         if input.input.id == "usernameLogin":
             self.__username = input.value
@@ -103,6 +106,7 @@ class MainScreen(Screen):
     def on_input_submitted(self, input):
         if input.input.id == "msgInput":
             self.message = input.value
+            input.input.value = ""
         self.dataLog.write(self.authorize_user)
         if self.authorize_user is None or self.authorize_user == "":
             self.dataLog.write("please select user!")
