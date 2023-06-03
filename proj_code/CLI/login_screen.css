@@ -1,0 +1,113 @@
+Screen {
+    layout: horizontal;
+    align: center middle;
+
+}
+
+Header {
+  dock: top;
+  height: 1;
+  content-align: center middle;
+  background: cyan;
+  color: black;
+}
+
+#usernameLogin {
+    align: center middle;
+    height: 3;
+    width: 70;
+}
+
+#passwordLogin {
+    align: center middle;
+    height: 3;
+    width: 70;
+}
+
+#loading {
+    align: center middle;
+    height: 2;
+    width: 60;
+}
+
+#loginTextLog {
+    align: center middle;
+    height: 15;
+    width: 70;
+    border: darkturquoise;
+
+}
+
+
+LOGIN_SCREEN {
+    content-align: center middle;
+    height: 70%;
+    width: 85%;
+    align: center middle;
+    border: darkturquoise;
+    border_title_align: center;
+}
+
+
+Upper {
+    layout: horizontal;
+    height: 65%;
+    width: 99%;
+}
+
+Second {
+    layout: horizontal;
+    height: 35%;
+    width: 99%;
+}
+
+Authorized {
+    content-align: center middle;
+    height: 100%;
+    width: 32%;
+    border: greenyellow heavy;
+}
+
+Waiting {
+    content-align: center middle;
+    height: 100%;
+    width: 32%;
+    border: greenyellow heavy;
+}
+
+#wconnLogger {
+    height: 99%;
+    width: 99%;
+}
+
+Connected {
+    content-align: center middle;
+    height: 100%;
+    width: 32%;
+    border: greenyellow heavy;
+}
+
+Wconn {
+    width: 49%;
+    border: yellow;
+}
+
+Logger {
+    width: 49%;
+}
+
+#dataLoger {
+    width: 98%;
+    height: 78%;
+    border: red heavy;
+}
+
+#msgInput {
+    height: 16%;
+    border: salmon
+}
+
+RadioSet {
+    height: 100%;
+    width: 98%;
+}
