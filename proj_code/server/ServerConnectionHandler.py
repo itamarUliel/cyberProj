@@ -119,8 +119,11 @@ class ServerConnectionHandler:
         return username_of_wait in self.__get_conn_data(to_wait_conn).get_waiting()
 
     def send_close_message(self, connection):
-        self.get_write_socket(connection).sendall(EncryptionUtils.encrypt(ChatProtocol.build_close_connection(),
-                                                                          self.get_public_key(connection)))
+        try:
+            self.get_write_socket(connection).sendall(EncryptionUtils.encrypt(ChatProtocol.build_close_connection(),
+                                                                              self.get_public_key(connection)))
+        except ConnectionAbortedError:
+            pass
         self.get_write_socket(connection).close()
 
     def connect_wconn(self, source, target_ip, target_port):
