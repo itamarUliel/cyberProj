@@ -343,6 +343,7 @@ class ChatServer:
 
 
 def main(ip=DEFAULT_IP, port=0):
+    print(FULL_LOGO)
     server = ChatServer((ip, port))
     server.start_running()
 
