@@ -21,6 +21,9 @@ class Upper(Widget):
         yield self.__logger
         yield self.__wconn
 
+    def _on_mount(self, event: events.Mount) -> None:
+        self.__wconn.border_title = "chat box - received message"
+
     def get_data_logger(self):
         return self.__logger.get_data_loger()
 
@@ -50,6 +53,10 @@ class Logger(Widget):
         yield self.__data_logger
         yield self.__msg_input
 
+    def _on_mount(self, event: events.Mount) -> None:
+        self.__data_logger.border_title = "server communication box"
+
+
     def get_data_loger(self):
         return self.__data_logger
 
@@ -68,9 +75,9 @@ class Second(Widget):
         yield self.waiting
 
     def on_mount(self):
-        self.connected.border_title = "Connected"
-        self.authorized.border_title = "Authorized"
-        self.waiting.border_title = "Waiting"
+        self.connected.border_title = "Connected - send friend request"
+        self.authorized.border_title = "Authorized - send message"
+        self.waiting.border_title = "Waiting - allow friend request"
 
 
 class Authorized(Widget):
