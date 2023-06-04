@@ -1,15 +1,19 @@
 Screen {
     layout: horizontal;
     align: center middle;
-
 }
 
 Header {
   dock: top;
   height: 1;
   content-align: center middle;
-  background: cyan;
-  color: black;
+  background: red 75%;
+  color: white;
+}
+
+Footer {
+    color: white;
+    background: red 75%;
 }
 
 #usernameLogin {
@@ -27,24 +31,26 @@ Header {
 #loading {
     align: center middle;
     height: 2;
-    width: 60;
+    width: 67;
+    color: red 75%;
 }
 
 #loginTextLog {
     align: center middle;
     height: 60%;
     width: 70;
-    border: darkturquoise;
-
+    color: red 75%;
+    border: red 75%;
 }
 
 
 LOGIN_SCREEN {
     content-align: center middle;
-    height: 20;
+    height: 26;
     width: 80;
     align: center middle;
-    border: darkturquoise;
+    color: red 75%;
+    border: red 75%;
     border_title_align: center;
 }
 
@@ -65,14 +71,14 @@ Authorized {
     content-align: center middle;
     height: 100%;
     width: 32%;
-    border: greenyellow heavy;
+    border: lightsalmon;
 }
 
 Waiting {
     content-align: center middle;
     height: 100%;
     width: 32%;
-    border: greenyellow heavy;
+    border: lightsalmon;
 }
 
 #wconnLogger {
@@ -84,12 +90,12 @@ Connected {
     content-align: center middle;
     height: 100%;
     width: 32%;
-    border: greenyellow heavy;
+    border: lightsalmon;
 }
 
 Wconn {
     width: 49%;
-    border: yellow;
+    border: red 75%;
 }
 
 Logger {
@@ -104,10 +110,48 @@ Logger {
 
 #msgInput {
     height: 16%;
-    border: salmon
+    border: red 75%;
 }
 
 RadioSet {
     height: 100%;
     width: 98%;
+}
+
+ConncetedScreen {
+    color: red 50%;
+    align: center top;
+    text-align: center;
+}
+
+#login_container {
+    height:6;
+    width: 40;
+    content-align: center middle;
+    text-align: center;
+
+}
+
+#logoLabel {
+    opacity: 0.0;
+    height:23;
+    width: 36;
+    color: red 50%;
+    margin: 0;
+
+}
+
+#loadingLogin{
+    opacity: 0.0;
+    height:3;
+    width: 36;
+    color: red 75%;
+    margin: 0;
+}
+
+#textLabel {
+    opacity: 0.0;
+    color: white;
+    width:35;
+    height:30;
 }

@@ -34,6 +34,11 @@ class TUIChatClient:
     def authorize(self, username):
         self.__conn_handler.authorize(username)
 
+    def get_username(self):
+        if self.__user_backup is None:
+            return None
+        return self.__user_backup[0]
+
     def allow(self, username):
         self.__conn_handler.allow(username)
 
