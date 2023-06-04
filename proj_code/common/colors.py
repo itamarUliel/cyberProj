@@ -8,28 +8,29 @@ PENDING_COLOR = Fore.LIGHTBLUE_EX
 DATA_COLOR = Fore.LIGHTYELLOW_EX
 
 
-LOGO = Fore.LIGHTMAGENTA_EX + r"""                  
-                   .:~!777!~^.           
-                 ^7Y555YYY55P5J~         
-                ~YYY7^:::::^7YPP?.       
-          :~7?JJYYY5Y55555555?Y5P?!7^.   
-        :J5PPYJJJJ7!!~~~~~~~!~~PP57PPY!  
-       :YP5J: 755J            .!77:~5PP~ 
-       !P55: .Y55~                  ?YY7 
-       ~P55^ ^555:                   ..  
-       .JPPY~!P5Y..........              
-        .!J5Y755Y75555555YYYYYYYYYJ?!^.  
-           .:7P5Y~!!!!!!!!!!!!!77?J5P5Y~ 
-             ~P55:                 .?555:
-       ~??7. ^555^                  :55P~
-       !PP5: .YPP7             ...  ^555^
-       .YPPJ~:7YYJ.           .Y55~~YPP? 
-        .7Y5P55YYYJJJJJJJJJJJ775PY?P5J!  
-           :^~!?YYYY??????77??5P5^^^:    
-                7555?~^:::~7YP5J:        
-                 :!JY555555YJ7^          
-                    ..::::..                                                                                  
+LOGO = Fore.LIGHTMAGENTA_EX + r"""
+           .:~!777!~^.           
+         ^7Y555YYY55P5J~         
+       ~YYY7^:::::^7YPP?.       
+  :~7?JJYYY5Y55555555?Y5P?!7^.   
+:J5PPYJJJJ7!!~~~~~~~!~~PP57PPY!  
+:YP5J: 755J            .!77:~5PP~ 
+!P55: .Y55~                  ?YY7 
+~P55^ ^555:                   ..  
+.JPPY~!P5Y..........              
+.!J5Y755Y75555555YYYYYYYYYJ?!^.  
+   .:7P5Y~!!!!!!!!!!!!!77?J5P5Y~ 
+     ~P55:                 .?555:
+~??7. ^555^                  :55P~
+!PP5: .YPP7             ...  ^555^
+.YPPJ~:7YYJ.           .Y55~~YPP? 
+.7Y5P55YYYJJJJJJJJJJJ775PY?P5J!  
+   :^~!?YYYY??????77??5P5^^^:    
+        7555?~^:::~7YP5J:        
+         :!JY555555YJ7^          
+            ..::::..                                                                                  
 """
+
 
 FULL_LOGO = Fore.LIGHTMAGENTA_EX + r"""                                                                                                                                                      
                                                                                                                                                       
@@ -78,10 +79,7 @@ FULL_LOGO = Fore.LIGHTMAGENTA_EX + r"""
       .^!7??JJJ??7^.  ~J!          ^J7  !J^             ~JJJJJJJJJJJJ?.             :~!7????7!~.  7J:          .?7  ~J!          ^J7     !J:          
                                                                                                                                                       """
 
-SMALL_FULL_LOGO = Fore.LIGHTMAGENTA_EX + r"""                                                                                                                   
-                                                                                                                   
-                                                                                                                   
-                                                                                                                   
+SMALL_FULL_LOGO = Fore.LIGHTMAGENTA_EX + r"""    
                                                     .^!??JJJJ?7~:                                                  
                                                   :7YPP5YJJJY5PP5J^                                                
                                                  :JYYJ~:.....:~J5P5!                                               

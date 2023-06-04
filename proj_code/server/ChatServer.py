@@ -14,7 +14,6 @@ COMM_CONNECTION_STATUS = "comm"
 
 
 class ChatServer:
-
     def __init__(self, address):
 
         self.__is_primary = None
