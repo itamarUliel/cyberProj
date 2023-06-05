@@ -62,7 +62,7 @@ class LoginScreen(Screen):
             self.__username = input.value
 
     def on_input_submitted(self, input):
-        if input.value is not "":
+        if input.value != "":
             if input.input.id == "passwordLogin":
                 self.__pwd = input.value
                 input.input.value = ""
@@ -144,19 +144,19 @@ class MainScreen(Screen):
             radio_set_id = radio_set.radio_set.id
             if radio_set_id == "waiting":
                 self.waiting_user = self.get_waiting_username()
-                if self.waiting_user is not "":
+                if self.waiting_user != "":
                     self.chat_client.allow(self.waiting_user)
                 self.refresh_user()
 
             elif radio_set_id == "connected":
                 self.connected_user = self.get_connected_username()
-                if self.connected_user is not "":
+                if self.connected_user != "":
                     self.chat_client.authorize(self.connected_user)
                 self.refresh_user()
 
             elif radio_set_id == "authorize":
                 self.authorize_user = self.get_authorize_username()
-                if self.authorize_user is not "":
+                if self.authorize_user != "":
                     self.main_screen.get_msg_input().placeholder = f"write you msg here (target user: '{self.authorize_user}')"
                 self.refresh_user()
         except ValueError:

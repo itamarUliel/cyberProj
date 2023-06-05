@@ -54,7 +54,7 @@ class Connection_box(Widget):
 
 class HorizontalLayout(App):
     CSS_PATH = "horizontal_layout.css"
-    TITLE = "SafeChat CLI by Itamar Uliel"
+    TITLE = "SafeChat TUI by Itamar Uliel"
     SUB_TITLE = "***insert time***"
 
     connected = reactive([])
