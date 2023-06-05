@@ -113,7 +113,7 @@ class MainScreen(Screen):
         self.chat_client.start_listener()
         time.sleep(1)
         self.refresh_user()
-        self.set_interval(interval=15, callback=self.refresh_user)
+        self.set_interval(interval=5, callback=self.refresh_user)
 
     def refresh_user(self):
         connected, authorize = self.chat_client.get_connected_users()
@@ -121,10 +121,11 @@ class MainScreen(Screen):
         self.load_waiting(waiting)
         self.load_connected(connected)
         self.load_authorize(authorize)
-        self.dataLog.write("user refreshed!")
 
     def action_refresh_users(self):
         self.refresh_user()
+        self.dataLog.write("user refreshed!")
+
 
     def on_input_submitted(self, input):
         if input.input.id == "msgInput":
@@ -182,7 +183,7 @@ class MainScreen(Screen):
 
 class ChatApp(App):
     global full_time
-    TITLE = "SafeChat CLI by Itamar Uliel"
+    TITLE = "SafeChat TUI by Itamar Uliel"
     CSS_PATH = "login_screen.css"
     BINDINGS = [("d", "toggle_dark", "Toggle dark mode")]
     chat_client = TUIChatClient()
