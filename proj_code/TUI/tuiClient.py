@@ -19,9 +19,14 @@ class EnterScreen(Screen):
         self.chat_client = chat_client
         self.clicker = 0
         self.connection_screen = ConncetedScreen()
+        self.header = Header(show_clock=True)
 
     def compose(self) -> ComposeResult:
+        yield self.header
         yield self.connection_screen
+
+    def _on_mount(self, event: events.Mount) -> None:
+        self.header.styles.background = "dimgray"
 
     def _on_click(self, event: events.Click) -> None:
         if self.clicker == 0:
@@ -182,10 +187,9 @@ class MainScreen(Screen):
 
 
 class ChatApp(App):
-    global full_time
     TITLE = "SafeChat TUI by Itamar Uliel"
-    CSS_PATH = "login_screen.css"
-    BINDINGS = [("d", "toggle_dark", "Toggle dark mode")]
+    CSS_PATH = "tuiClient.css"
+    BINDINGS = [("d", "toggle_dark", "Toggle dark mode"), ("ctrl+e", "close_app", "Close the app")]
     chat_client = TUIChatClient()
     SCREENS = {"MainScreen": MainScreen(chat_client), "LoginScreen": LoginScreen(chat_client), "EnterScreen": EnterScreen(chat_client)}
 
@@ -193,11 +197,11 @@ class ChatApp(App):
         super().__init__()
 
     def on_mount(self):
-        try:
-            # self.push_screen("LoginScreen")
-            self.push_screen("EnterScreen")
-        except ConnectionError:
-            self.chat_client.restart_conn_handler()
+        self.push_screen("EnterScreen")
+
+    @staticmethod
+    def action_close_app():
+        app.exit()
 
 
 
