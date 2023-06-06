@@ -1,7 +1,7 @@
 import select
 from threading import Thread
 import argparse
-
+from proj_code.common.network_utils import local_ip
 from proj_code.server import *
 from proj_code.server.ServerConnectionHandler import ServerConnectionHandler
 from proj_code.server.BackupConnectionHandler import BackupConnectionHandler
@@ -343,7 +343,7 @@ class ChatServer:
 
 def main(ip=DEFAULT_IP, port=0):
     print(FULL_LOGO)
-    server = ChatServer((ip, port))
+    server = ChatServer((local_ip, port))
     server.start_running()
 
 

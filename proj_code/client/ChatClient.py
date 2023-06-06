@@ -1,7 +1,6 @@
 from os import dup
 import sys
 from threading import Thread
-
 from proj_code.client import *
 
 

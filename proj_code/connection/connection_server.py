@@ -2,6 +2,7 @@ from flask import Flask, make_response, request, abort
 import keyboard
 import threading
 from proj_code.common.colors import *
+from proj_code.connection.connection_utils import local_ip
 app = Flask(__name__)
 
 PRIMARY_IP = "127.0.0.1"
@@ -122,7 +123,7 @@ def switch_servers():
 def main():
     print(PENDING_COLOR + "to reset connection servers registered server press 'esc'", ERROR_COLOR + "DO NOT USE WHILE COMMUNICATING")
     threading.Thread(target=resetting).start()
-    app.run()
+    app.run(host=local_ip)
 
 
 if __name__ == '__main__':
