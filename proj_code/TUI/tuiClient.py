@@ -1,6 +1,7 @@
 import sys
 import time
 from os import dup
+from datetime import datetime
 
 from textual import events
 from textual.app import App, ComposeResult
@@ -131,18 +132,17 @@ class MainScreen(Screen):
         self.refresh_user()
         self.dataLog.write("user refreshed!")
 
-
     def on_input_submitted(self, input):
         if input.input.id == "msgInput":
             self.message = input.value
             input.input.value = ""
-        self.dataLog.write(self.authorize_user)
         if self.authorize_user is None or self.authorize_user == "":
             self.dataLog.write("please select user!")
         else:
             sent = self.chat_client.send_message(self.authorize_user, self.message)
             if sent:
-                self.wconnLog.write(f"from Me to '{self.authorize_user}': {self.message}")
+                current_time = datetime.now().strftime('%H:%M:%S')
+                self.wconnLog.write(f"[{current_time}] from Me to '{self.authorize_user}': {self.message}")
 
     def on_radio_set_changed(self, radio_set):
         try:

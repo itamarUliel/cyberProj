@@ -111,7 +111,7 @@ class TUIClientConnectionHandler:
             self.__send_message(ChatProtocol.build_authorize(username))
             status, msg = ChatProtocol.parse_response(self.__receive_message())
             if status == OK_STATUS:
-                print(OK_COLOR + msg)
+                print(msg)
                 print(f"User '{username}'asked to authorized")
             else:
                 print(f"User '{username}' failed to authorize. {msg}")

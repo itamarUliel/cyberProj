@@ -1,5 +1,6 @@
 from proj_code.common import *
 from proj_code.client import *
+from datetime import datetime
 class TUIChatClientListener:
 
     @staticmethod
@@ -11,7 +12,8 @@ class TUIChatClientListener:
             if command == OK_STATUS:
                 text_logger.write(data[0])
             elif command == MSG_COMMAND:
-                text_logger.write(DATA_COLOR + f"got msg from {data[0]}:{PENDING_COLOR + f'{data[1]}'}")
+                current_time = datetime.now().strftime('%H:%M:%S')
+                text_logger.write(f"[{current_time}] got msg from {data[0]}: {f'{data[1]}'}")
             elif command == CLOSE_COMMAND:
                 connection_handler.close_connection()
                 text_logger.write("the server close the connection with the wconn")
